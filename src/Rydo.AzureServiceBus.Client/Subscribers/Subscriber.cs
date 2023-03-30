@@ -12,7 +12,7 @@
     using Microsoft.Extensions.Logging;
     using Middlewares;
 
-    public sealed class Subscriber : ISubscriber
+    internal sealed class Subscriber : ISubscriber
     {
         private ILogger<Subscriber> _logger;
         private IServiceProvider _serviceProvider;
@@ -46,27 +46,23 @@
             _readerTask = Task.Run(ReadFromChannel);
         }
 
-        public ISubscriber WithServiceProvider(IServiceProvider serviceProvider)
+        public ISubscriber ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _logger = _serviceProvider.GetRequiredService<ILogger<Subscriber>>();
+            
             return this;
         }
 
-        public ISubscriber WithMiddleExecutor(IMiddlewareExecutor middlewareExecutor)
+        public ISubscriber MiddleExecutor(IMiddlewareExecutor middlewareExecutor)
         {
             _middlewareExecutor = middlewareExecutor;
             return this;
         }
 
-        public ISubscriber WithServiceBusClient(ServiceBusClient serviceBusClient)
+        public ISubscriber ServiceBusClient(ServiceBusClient serviceBusClient)
         {
             _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
-            return this;
-        }
-
-        public ISubscriber WithLogging(ILogger<Subscriber> logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             return this;
         }
 
@@ -112,6 +108,7 @@
         private async Task ReadFromChannel()
         {
             const int batchCapacity = 1_000;
+            
             try
             {
                 while (await _queue.Reader.WaitToReadAsync(_cancellationToken))

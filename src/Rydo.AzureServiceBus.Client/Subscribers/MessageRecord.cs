@@ -2,6 +2,7 @@
 {
     using System;
     using System.Runtime.CompilerServices;
+    using System.Text.Json;
     using Azure.Messaging.ServiceBus;
     using Handlers;
 
@@ -11,7 +12,7 @@
         private readonly byte[] _key;
         private readonly ReadOnlyMemory<byte> _value;
 
-        public MessageRecord(string messageId, object messageValue, ServiceBusReceivedMessage receivedMessage)
+        public MessageRecord(string messageId, string partitionKey, object messageValue, ServiceBusReceivedMessage receivedMessage)
         {
             MessageId = messageId;
             _messageValue = messageValue;
@@ -46,6 +47,14 @@
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ValueAsJsonString()
+        {
+            var valueAsJsonString =
+                JsonSerializer.Serialize(_messageValue);
+            return valueAsJsonString;
+        }
+        
         internal void SetMessageConsumerContext(MessageConsumerContext messageConsumerContext)
         {
             MessageConsumerCtx =

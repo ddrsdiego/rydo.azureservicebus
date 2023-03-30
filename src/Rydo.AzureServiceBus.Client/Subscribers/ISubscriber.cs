@@ -4,18 +4,15 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.ServiceBus;
-    using Microsoft.Extensions.Logging;
     using Middlewares;
 
     public interface ISubscriber
     {
-        ISubscriber WithServiceProvider(IServiceProvider serviceProvider);
+        ISubscriber ServiceProvider(IServiceProvider serviceProvider);
         
-        ISubscriber WithMiddleExecutor(IMiddlewareExecutor middlewareExecutor);
+        ISubscriber MiddleExecutor(IMiddlewareExecutor middlewareExecutor);
         
-        ISubscriber WithServiceBusClient(ServiceBusClient serviceBusClient);
-
-        ISubscriber WithLogging(ILogger<Subscriber> logger);
+        ISubscriber ServiceBusClient(ServiceBusClient serviceBusClient);
         
         Task<bool> IsRunning { get; set; }
 

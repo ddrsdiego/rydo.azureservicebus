@@ -52,7 +52,7 @@
                     //     
                     // }
                     
-                    yield return messageContext.MessageRecord;
+                    yield return messageContext.Message;
                 }
             }
         }

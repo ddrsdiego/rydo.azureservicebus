@@ -14,14 +14,15 @@
             : base(logger.CreateLogger<SerializerConsumerMiddleware>())
         {
         }
-        
+
         public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next,
             CancellationToken cancellationToken = default)
         {
             foreach (var messageContext in context.MessageContexts)
             {
-                var messageId = messageContext.Message.MessageId;
-                var rawData = messageContext.Message.Payload.ToArray();
+                var partitionKey = messageContext.MessageReceived.PartitionKey;
+                var messageId = messageContext.MessageReceived.MessageId;
+                var rawData = messageContext.MessageReceived.Payload.ToArray();
 
                 using var streamValue = new MemoryStream(rawData);
                 var messageValue = await JsonSerializer.DeserializeAsync(
@@ -29,7 +30,9 @@
                         context.ConsumerContext.ContractType, cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
 
-                var messageRecord = new MessageRecord(messageId, messageValue, messageContext.ReceivedMessage);
+                var messageRecord =
+                    new MessageRecord(messageId, partitionKey, messageValue, messageContext.ReceivedMessage);
+                
                 messageContext.SetMessageRecord(messageRecord);
             }
 

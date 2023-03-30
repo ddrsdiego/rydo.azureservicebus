@@ -27,10 +27,9 @@
                 var serviceBusClient = (ServiceBusClient) provider.GetRequiredService(typeof(ServiceBusClient));
                 
                 subscriber
-                    .WithMiddleExecutor(BuildMiddlewareExecutor(provider))
-                    .WithServiceProvider(provider)
-                    .WithLogging(provider.GetRequiredService<ILogger<Subscriber>>())
-                    .WithServiceBusClient(serviceBusClient);
+                    .MiddleExecutor(BuildMiddlewareExecutor(provider))
+                    .ServiceProvider(provider)
+                    .ServiceBusClient(serviceBusClient);
             }
         }
 

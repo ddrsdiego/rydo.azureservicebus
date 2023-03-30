@@ -1,6 +1,7 @@
 namespace Rydo.AzureServiceBus.Client.Consumers
 {
     using Configurations;
+    using CSharpFunctionalExtensions;
 
     public sealed class ConsumerConfiguratorBuilder
     {
@@ -10,12 +11,17 @@ namespace Rydo.AzureServiceBus.Client.Consumers
         private int _lockDurationInMinutes;
         private int _bufferSize;
         private int _maxDeliveryCount;
+        private bool _neverAutoDelete;
+        private int _autoDeleteAfterIdleInHours;
 
         internal ConsumerConfiguratorBuilder(string topicName)
         {
-            _topicName = topicName;
             HasBuild = false;
+            
+            _topicName = topicName;
             _subscriptionName = string.Empty;
+            _autoDeleteAfterIdleInHours = TopicConsumerDefaultValues.AutoDeleteAfterIdleInHours;
+            _neverAutoDelete = TopicConsumerDefaultValues.NeverAutoDelete;
             _maxDeliveryCount = TopicConsumerDefaultValues.MaxDeliveryCount;
             _bufferSize = TopicConsumerDefaultValues.BufferSize;
             _maxMessages = TopicConsumerDefaultValues.MaxMessages;
@@ -29,9 +35,21 @@ namespace Rydo.AzureServiceBus.Client.Consumers
         /// </summary>
         /// <param name="subscriptionName"></param>
         /// <returns></returns>
-        public ConsumerConfiguratorBuilder SetSubscriptionName(string subscriptionName)
+        public ConsumerConfiguratorBuilder SubscriptionName(string subscriptionName)
         {
             _subscriptionName = subscriptionName;
+            return this;
+        }
+
+        public ConsumerConfiguratorBuilder AutoDeleteAfterIdleInHours(int autoDeleteAfterIdleInHours)
+        {
+            _autoDeleteAfterIdleInHours = autoDeleteAfterIdleInHours;
+            return this;
+        }
+        
+        public ConsumerConfiguratorBuilder NeverAutoDelete(bool neverAutoDelete)
+        {
+            _neverAutoDelete = neverAutoDelete;
             return this;
         }
 
@@ -42,7 +60,7 @@ namespace Rydo.AzureServiceBus.Client.Consumers
         /// </summary>
         /// <param name="lockDurationInMinutes"></param>
         /// <returns></returns>
-        public ConsumerConfiguratorBuilder SetLockDurationInMinutes(int lockDurationInMinutes)
+        public ConsumerConfiguratorBuilder LockDurationInMinutes(int lockDurationInMinutes)
         {
             _lockDurationInMinutes = lockDurationInMinutes;
             return this;
@@ -53,7 +71,7 @@ namespace Rydo.AzureServiceBus.Client.Consumers
         /// </summary>
         /// <param name="maxDeliveryCount"></param>
         /// <returns></returns>
-        public ConsumerConfiguratorBuilder SetMaxDeliveryCount(int maxDeliveryCount)
+        public ConsumerConfiguratorBuilder MaxDeliveryCount(int maxDeliveryCount)
         {
             if (maxDeliveryCount <= 0)
                 maxDeliveryCount = TopicConsumerDefaultValues.MaxDeliveryCount;
@@ -62,13 +80,13 @@ namespace Rydo.AzureServiceBus.Client.Consumers
             return this;
         }
 
-        public ConsumerConfiguratorBuilder SetMaxMessages(int maxMessages)
+        public ConsumerConfiguratorBuilder MaxMessages(int maxMessages)
         {
             _maxMessages = maxMessages;
             return this;
         }
 
-        public ConsumerConfiguratorBuilder SetBufferSize(int bufferSize)
+        public ConsumerConfiguratorBuilder BufferSize(int bufferSize)
         {
             if (bufferSize <= 0)
                 bufferSize = TopicConsumerDefaultValues.BufferSize;
@@ -79,18 +97,20 @@ namespace Rydo.AzureServiceBus.Client.Consumers
 
         internal IConsumerConfigurator ConsumerConfigurator { get; private set; }
 
-        internal IConsumerConfigurator Build()
+        internal Result<IConsumerConfigurator> Build()
         {
             ConsumerConfigurator = new ConsumerConfigurator(_topicName, _subscriptionName)
             {
                 LockDurationInMinutes = _lockDurationInMinutes,
                 MaxDeliveryCount = _maxDeliveryCount,
                 MaxMessages = _maxMessages,
-                BufferSize = _bufferSize
+                BufferSize = _bufferSize,
+                NeverAutoDelete = _neverAutoDelete,
+                AutoDeleteAfterIdleInHours = _autoDeleteAfterIdleInHours
             };
 
             HasBuild = true;
-            return ConsumerConfigurator;
+            return Result.Success(ConsumerConfigurator);
         }
     }
 }

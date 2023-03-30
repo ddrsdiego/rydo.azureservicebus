@@ -8,20 +8,20 @@
     {
         private MessageConsumerContext _messageConsumerContext;
 
-        public MessageContext(MessageReceived message, ServiceBusReceivedMessage receivedMessage)
+        public MessageContext(MessageReceived messageReceived, ServiceBusReceivedMessage receivedMessage)
         {
-            Message = message;
+            MessageReceived = messageReceived;
             ReceivedMessage = receivedMessage;
         }
 
-        public readonly MessageReceived Message;
-        public MessageRecord MessageRecord;
-        public readonly ServiceBusReceivedMessage ReceivedMessage;
+        public MessageRecord Message;
+        internal readonly MessageReceived MessageReceived;
+        internal readonly ServiceBusReceivedMessage ReceivedMessage;
 
         internal void SetMessageRecord(MessageRecord messageRecord)
         {
-            MessageRecord = messageRecord;
-            MessageRecord.SetMessageConsumerContext(_messageConsumerContext);
+            Message = messageRecord;
+            Message.SetMessageConsumerContext(_messageConsumerContext);
         }
 
         internal void SetMessageConsumerContext(MessageConsumerContext context)

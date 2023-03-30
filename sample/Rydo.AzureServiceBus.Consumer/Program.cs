@@ -16,7 +16,7 @@ builder.Services.AddAzureServiceBusClient(config =>
 
     config.Consumer.Configure(typeof(Program), consumers =>
     {
-        consumers.AddSubscriber("azureservicebus-sample-account-created");
+        consumers.AddSubscriber("azureservicebus-sample-account-created", x => x.MaxMessages(1_000));
         consumers.AddSubscriber("azureservicebus-sample-account-updated");
     });
 });

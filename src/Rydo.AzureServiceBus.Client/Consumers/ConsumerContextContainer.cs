@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
+    using Extensions;
     using Handlers;
     using Microsoft.Extensions.DependencyInjection;
     using Topics;
@@ -30,90 +31,32 @@
 
         public void AddSubscriber(string topicName, Action<ConsumerConfiguratorBuilder> configurator)
         {
-            if (string.IsNullOrWhiteSpace(topicName)) throw new ArgumentNullException(nameof(topicName));
-
-            if (Contexts.TryGetValue(topicName, out var _))
-                throw new InvalidOperationException(nameof(topicName));
-
-            var consumerHandlers =
-                new Dictionary<(string, string), (Type ContractType, Type HandlerType)>();
+            if (Contexts.TryGetValue(topicName, out var _)) throw new InvalidOperationException(nameof(topicName));
             
-            var assemblies = _types.Select(x => x.Assembly);
-            foreach (var exportedTypes in assemblies.Select(x => x.ExportedTypes))
-            {
-                foreach (var exportedType in exportedTypes)
-                {
-                    if (!TryGetConsumerHandler(exportedType, out var consumerHandlerType))
-                        continue;
-
-                    (string, string) consumerHandlerId = (exportedType.Assembly.GetName().Name, exportedType.FullName);
-                    consumerHandlers.Add(consumerHandlerId, consumerHandlerType);
-                }
-            }
-
-            var clientTypes = consumerHandlers
-                .FirstOrDefault(messageHandler => IsTopicConsumerAttribute(messageHandler, topicName));
-
-            if (clientTypes.Value.HandlerType == null)
+            var result = _types.TryExtractCustomerHandlers(topicName);
+            if (result.IsFailure)
                 return;
 
             var builder = new ConsumerConfiguratorBuilder(topicName);
             configurator(builder);
 
             var consumerConfigurator = !builder.HasBuild
-                ? builder.Build()
+                ? builder.Build().Value
                 : builder.ConsumerConfigurator;
 
             var subscriptionName = string.IsNullOrWhiteSpace(consumerConfigurator.SubscriptionName)
                 ? GetSubscriptionName(consumerConfigurator, _types.First())
                 : consumerConfigurator.SubscriptionName;
 
-            var consumerSpecification = new ConsumerSpecification(topicName, subscriptionName, 10,
-                consumerConfigurator.LockDurationInMinutes, consumerConfigurator.MaxDeliveryCount);
+            var consumerSpecification = new ConsumerSpecification(topicName, subscriptionName,
+                consumerConfigurator.MaxMessages,
+                consumerConfigurator.LockDurationInMinutes,
+                consumerConfigurator.MaxDeliveryCount);
 
-            var context = new ConsumerContext(consumerSpecification, clientTypes.Value.ContractType,
-                clientTypes.Value.HandlerType);
+            var context = new ConsumerContext(consumerSpecification, result.Value.ContractType,
+                result.Value.HandlerType);
 
             Contexts = Contexts.Add(context.ConsumerSpecification.TopicName, context);
-        }
-
-        private static bool TryGetConsumerHandler(Type type,
-            out (Type ContractType, Type HandlerType) consumerHandlerType)
-        {
-            consumerHandlerType = default;
-            if (!type.GetInterfaces().Any(FindConsumerHandler))
-                return false;
-
-            var clientContract = type
-                .GetInterfaces()
-                .Where(x => x.IsGenericType && typeof(IConsumerHandler).IsAssignableFrom(x))
-                .Select(x => x.GenericTypeArguments[0]).FirstOrDefault();
-
-            consumerHandlerType = (clientContract, type);
-            return true;
-        }
-
-        private static bool IsTopicConsumerAttribute(
-            KeyValuePair<(string, string), (Type MessageContractType, Type MessageHandlerType)> clientTypes,
-            string topicName)
-        {
-            var (key, (messageContractType, messageHandlerType)) = clientTypes;
-            if (messageHandlerType is null)
-                throw new Exception();
-
-            return messageHandlerType
-                .CustomAttributes.FirstOrDefault(x => x.AttributeType.Name.Contains(nameof(TopicConsumerAttribute)))
-                .ConstructorArguments.Any(x =>
-                    x.Value != null &&
-                    x.Value.ToString().Equals(topicName, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        private static bool FindConsumerHandler(Type type)
-        {
-            return type.IsInterface
-                   && !type.IsGenericType
-                   && type.GenericTypeArguments.Length == 0
-                   && type.Name.Equals(nameof(IConsumerHandler), StringComparison.InvariantCultureIgnoreCase);
         }
 
         public bool TryGetConsumerContext(string topicName, out ConsumerContext context)

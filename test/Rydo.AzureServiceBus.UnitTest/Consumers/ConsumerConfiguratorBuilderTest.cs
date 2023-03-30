@@ -12,12 +12,12 @@
         {
             var builder = new ConsumerConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder
-                .SetBufferSize(0)
+                .BufferSize(0)
                 .Build();
 
-            consumerConfigurator.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);
-            consumerConfigurator.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
+            consumerConfigurator.Value.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);
+            consumerConfigurator.Value.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
         }
 
         [Test]
@@ -27,19 +27,19 @@
             const string subscriptionName = "rydo.azure.servicebus.unittest.consumers";
             
             var consumerConfigurator = builder
-                .SetBufferSize(1_000)
-                .SetMaxDeliveryCount(-100)
-                .SetMaxMessages(2000)
-                .SetLockDurationInMinutes(5)
-                .SetSubscriptionName(subscriptionName)
+                .BufferSize(1_000)
+                .MaxDeliveryCount(-100)
+                .MaxMessages(2000)
+                .LockDurationInMinutes(5)
+                .SubscriptionName(subscriptionName)
                 .Build();
 
-            consumerConfigurator.BufferSize.Should().Be(1_000);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(10);
-            consumerConfigurator.LockDurationInMinutes.Should().Be(5);
-            consumerConfigurator.MaxMessages.Should().Be(2000);
-            consumerConfigurator.SubscriptionName.Should().Be(subscriptionName);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
+            consumerConfigurator.Value.BufferSize.Should().Be(1_000);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(10);
+            consumerConfigurator.Value.LockDurationInMinutes.Should().Be(5);
+            consumerConfigurator.Value.MaxMessages.Should().Be(2000);
+            consumerConfigurator.Value.SubscriptionName.Should().Be(subscriptionName);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
         }
         
         [Test]
@@ -49,19 +49,19 @@
             const string subscriptionName = "rydo.azure.servicebus.unittest.consumers";
             
             var consumerConfigurator = builder
-                .SetBufferSize(1_000)
-                .SetMaxDeliveryCount(10)
-                .SetMaxMessages(2000)
-                .SetLockDurationInMinutes(5)
-                .SetSubscriptionName(subscriptionName)
+                .BufferSize(1_000)
+                .MaxDeliveryCount(10)
+                .MaxMessages(2000)
+                .LockDurationInMinutes(5)
+                .SubscriptionName(subscriptionName)
                 .Build();
 
-            consumerConfigurator.BufferSize.Should().Be(1_000);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(10);
-            consumerConfigurator.LockDurationInMinutes.Should().Be(5);
-            consumerConfigurator.MaxMessages.Should().Be(2000);
-            consumerConfigurator.SubscriptionName.Should().Be(subscriptionName);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
+            consumerConfigurator.Value.BufferSize.Should().Be(1_000);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(10);
+            consumerConfigurator.Value.LockDurationInMinutes.Should().Be(5);
+            consumerConfigurator.Value.MaxMessages.Should().Be(2000);
+            consumerConfigurator.Value.SubscriptionName.Should().Be(subscriptionName);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
         }
         
         [Test]
@@ -69,12 +69,12 @@
         {
             var builder = new ConsumerConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder
-                .SetBufferSize(1_000)
+                .BufferSize(1_000)
                 .Build();
 
-            consumerConfigurator.BufferSize.Should().Be(1_000);
-            consumerConfigurator.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
+            consumerConfigurator.Value.BufferSize.Should().Be(1_000);
+            consumerConfigurator.Value.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
         }
         
         [Test]
@@ -83,9 +83,9 @@
             var builder = new ConsumerConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder.Build();
 
-            consumerConfigurator.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);
-            consumerConfigurator.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
-            consumerConfigurator.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
+            consumerConfigurator.Value.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);
+            consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
+            consumerConfigurator.Value.MaxMessages.Should().Be(TopicConsumerDefaultValues.MaxMessages);
         }
     }
 }

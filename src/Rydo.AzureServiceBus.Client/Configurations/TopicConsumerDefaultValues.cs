@@ -6,5 +6,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations
         public const int BufferSize = 1;
         public const int MaxDeliveryCount = 10;
         public const int LockDurationInSeconds = 60;
+        public const bool NeverAutoDelete = false;
+        public const int AutoDeleteAfterIdleInHours = 240;
     }
 }

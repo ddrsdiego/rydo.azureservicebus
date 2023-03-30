@@ -21,6 +21,10 @@
     {
         string TopicName { get; }
 
+        bool NeverAutoDelete { get; set; }
+
+        int AutoDeleteAfterIdleInHours { get; set; }
+        
         int MaxMessages { get; set; }
 
         int BufferSize { get; set; }
@@ -41,10 +45,12 @@
         }
 
         public string TopicName { get; }
+        public bool NeverAutoDelete { get; set; }
         public int MaxMessages { get; set; }
         public int BufferSize { get; set; }
         public string SubscriptionName { get; }
         public int LockDurationInMinutes { get; set; }
         public int MaxDeliveryCount { get; set; }
+        public int AutoDeleteAfterIdleInHours { get; set; }
     }
 }
