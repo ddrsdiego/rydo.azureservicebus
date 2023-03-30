@@ -1,4 +1,4 @@
-﻿namespace Rydo.AzureServiceBus.Client.Consumers
+﻿namespace Rydo.AzureServiceBus.Client.Subscribers
 {
     using System;
     using System.Threading;

@@ -5,6 +5,7 @@
     using System.Runtime.CompilerServices;
     using Azure.Messaging.ServiceBus;
     using Consumers;
+    using Subscribers;
 
     public sealed class MessageConsumerContext
     {

@@ -1,13 +1,12 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Middlewares.Consumers
 {
-    using System;
     using System.IO;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-    using Client.Consumers;
     using Handlers;
     using Microsoft.Extensions.Logging;
+    using Subscribers;
 
     internal sealed class SerializerConsumerMiddleware : MessageMiddleware
     {

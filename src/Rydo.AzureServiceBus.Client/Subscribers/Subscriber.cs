@@ -1,4 +1,4 @@
-﻿namespace Rydo.AzureServiceBus.Client.Consumers
+﻿namespace Rydo.AzureServiceBus.Client.Subscribers
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -6,6 +6,7 @@
     using System.Threading.Channels;
     using System.Threading.Tasks;
     using Azure.Messaging.ServiceBus;
+    using Consumers;
     using Handlers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -73,14 +74,19 @@
 
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
+            var maxDelivery = _consumerContext.ConsumerSpecification.MaxDelivery;
+            
             _receiver ??= _serviceBusClient.CreateReceiver(_consumerContext.ConsumerSpecification.TopicName,
-                _consumerContext.ConsumerSpecification.SubscriptionName);
-
-            var entityPath = _receiver.EntityPath;
+                _consumerContext.ConsumerSpecification.SubscriptionName, new ServiceBusReceiverOptions
+                {
+                    PrefetchCount = maxDelivery,
+                    Identifier = _consumerContext.ConsumerSpecification.SubscriptionName,
+                    ReceiveMode = ServiceBusReceiveMode.PeekLock
+                });
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var receivedMessages = await _receiver.ReceiveMessagesAsync(1_000, cancellationToken: stoppingToken);
+                var receivedMessages = await _receiver.ReceiveMessagesAsync(maxDelivery, cancellationToken: stoppingToken);
                 if (receivedMessages == null && receivedMessages.Count == 0)
                     continue;
 
@@ -140,45 +146,5 @@
                 throw;
             }
         }
-    }
-
-    public sealed class MessageContext
-    {
-        private MessageConsumerContext _messageConsumerContext;
-
-        public MessageContext(MessageReceived message, ServiceBusReceivedMessage receivedMessage)
-        {
-            Message = message;
-            ReceivedMessage = receivedMessage;
-        }
-
-        public readonly MessageReceived Message;
-        public MessageRecord MessageRecord;
-        public readonly ServiceBusReceivedMessage ReceivedMessage;
-
-        internal void SetMessageRecord(MessageRecord messageRecord)
-        {
-            MessageRecord = messageRecord;
-            MessageRecord.SetMessageConsumerContext(_messageConsumerContext);
-        }
-
-        internal void SetMessageConsumerContext(MessageConsumerContext context)
-        {
-            _messageConsumerContext = context ?? throw new ArgumentNullException(nameof(context));
-        }
-    }
-
-    public readonly struct MessageReceived
-    {
-        public MessageReceived(string messageId, string partitionKey, ReadOnlyMemory<byte> payload)
-        {
-            MessageId = messageId;
-            PartitionKey = partitionKey;
-            Payload = payload;
-        }
-
-        public readonly string MessageId;
-        public readonly string PartitionKey;
-        public readonly ReadOnlyMemory<byte> Payload;
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Rydo.AzureServiceBus.Client.Consumers
+﻿namespace Rydo.AzureServiceBus.Client.Subscribers
 {
     using System;
     using System.Runtime.CompilerServices;
@@ -7,7 +7,6 @@
 
     public sealed class MessageRecord
     {
-        
         private readonly object _messageValue;
         private readonly byte[] _key;
         private readonly ReadOnlyMemory<byte> _value;
@@ -18,12 +17,12 @@
             _messageValue = messageValue;
             _value = receivedMessage.Body.ToArray();
         }
-        
+
         public readonly string MessageId;
-        
-        internal MessageConsumerContext MessageConsumerCtx;
-        
+
         internal bool IsValid { get; set; }
+
+        internal MessageConsumerContext MessageConsumerCtx;
 
         /// <summary>
         /// Get the raw message contained in the Value field
@@ -46,7 +45,7 @@
                 return default;
             }
         }
-        
+
         internal void SetMessageConsumerContext(MessageConsumerContext messageConsumerContext)
         {
             MessageConsumerCtx =

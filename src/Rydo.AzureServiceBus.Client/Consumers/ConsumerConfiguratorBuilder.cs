@@ -24,18 +24,35 @@ namespace Rydo.AzureServiceBus.Client.Consumers
 
         public bool HasBuild { get; private set; }
 
+        /// <summary>
+        /// Subscription names can contain letters, numbers, periods (.), hyphens (-), and underscores (_), up to 50 characters. Subscription names are also case-insensitive.
+        /// </summary>
+        /// <param name="subscriptionName"></param>
+        /// <returns></returns>
         public ConsumerConfiguratorBuilder SetSubscriptionName(string subscriptionName)
         {
             _subscriptionName = subscriptionName;
             return this;
         }
 
+        /// <summary>
+        /// Sets the amount of time that a message is locked for other receivers.
+        /// After its lock expires, a message pulled by one receiver becomes available to be pulled by other receivers.
+        /// Defaults to 30 seconds, with a maximum of 5 minutes.
+        /// </summary>
+        /// <param name="lockDurationInMinutes"></param>
+        /// <returns></returns>
         public ConsumerConfiguratorBuilder SetLockDurationInMinutes(int lockDurationInMinutes)
         {
             _lockDurationInMinutes = lockDurationInMinutes;
             return this;
         }
 
+        /// <summary>
+        /// Number of maximum deliveries, value ranging from 1 to 2000.
+        /// </summary>
+        /// <param name="maxDeliveryCount"></param>
+        /// <returns></returns>
         public ConsumerConfiguratorBuilder SetMaxDeliveryCount(int maxDeliveryCount)
         {
             if (maxDeliveryCount <= 0)
