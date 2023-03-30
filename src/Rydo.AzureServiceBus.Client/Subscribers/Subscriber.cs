@@ -50,7 +50,7 @@
         {
             _serviceProvider = serviceProvider;
             _logger = _serviceProvider.GetRequiredService<ILogger<Subscriber>>();
-            
+
             return this;
         }
 
@@ -71,7 +71,7 @@
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
             var maxDelivery = _consumerContext.ConsumerSpecification.MaxDelivery;
-            
+
             _receiver ??= _serviceBusClient.CreateReceiver(_consumerContext.ConsumerSpecification.TopicName,
                 _consumerContext.ConsumerSpecification.SubscriptionName, new ServiceBusReceiverOptions
                 {
@@ -82,7 +82,8 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var receivedMessages = await _receiver.ReceiveMessagesAsync(maxDelivery, cancellationToken: stoppingToken);
+                var receivedMessages =
+                    await _receiver.ReceiveMessagesAsync(maxDelivery, cancellationToken: stoppingToken);
                 if (receivedMessages == null && receivedMessages.Count == 0)
                     continue;
 
@@ -108,7 +109,7 @@
         private async Task ReadFromChannel()
         {
             const int batchCapacity = 1_000;
-            
+
             try
             {
                 while (await _queue.Reader.WaitToReadAsync(_cancellationToken))
@@ -119,13 +120,7 @@
 
                     while (counter < batchCapacity && _queue.Reader.TryRead(out var receivedMessage))
                     {
-                        var messageId = receivedMessage.MessageId;
-                        var partitionKey = receivedMessage.PartitionKey;
-                        var payload = receivedMessage.Body.ToArray();
-
-                        var message = new MessageReceived(messageId, partitionKey, payload);
-                        var messageContext = new MessageContext(message, receivedMessage);
-
+                        var messageContext = new MessageContext(receivedMessage);
                         messageConsumerContext.Add(messageContext);
                         counter++;
                     }

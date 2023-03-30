@@ -6,30 +6,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 var sbConnectionString = builder.Configuration.GetConnectionString("ServiceBus");
 
+const string accountUpdatedTopic = "azureservicebus-sample-account-updated";
+const string accountCreatedTopic = "azureservicebus-sample-account-created";
+
 builder.Services.AddAzureServiceBusClient(config =>
 {
     config.Producer.Configure(producers =>
     {
-        producers.AddProducers("rydo-azureservicebus-account-created");
-        producers.AddProducers("rydo-azureservicebus-account-updated");
+        producers.AddProducers(accountCreatedTopic);
+        producers.AddProducers(accountUpdatedTopic);
     });
 
     config.Consumer.Configure(typeof(Program), consumers =>
     {
-        consumers.AddSubscriber("azureservicebus-sample-account-created", x => x.MaxMessages(1_000));
-        consumers.AddSubscriber("azureservicebus-sample-account-updated");
+        consumers.AddSubscriber(accountCreatedTopic, configurator =>
+        {
+            configurator.BufferSize(1_000);
+            configurator.MaxMessages(1_000);
+        });
+        consumers.AddSubscriber(accountUpdatedTopic);
     });
 });
 
 builder.Services.AddAzureClients(config => { config.AddServiceBusClient(sbConnectionString); });
 builder.Services.AddSingleton(sp => new ServiceBusAdministrationClient(sbConnectionString));
 
-// builder.Services.AddHostedService<AccountCreatedSubscriptionWorker>();
-// builder.Services.AddHostedService<AccountUpdatedSubscriptionWorker>();
-
 var app = builder.Build();
-
-// var a = app.Services.GetRequiredService<IProducerContextContainer>();
 
 app.MapGet("/", () => "Hello World!");
 

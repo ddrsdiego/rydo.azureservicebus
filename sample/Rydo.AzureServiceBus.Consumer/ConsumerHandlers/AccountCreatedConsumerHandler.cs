@@ -27,13 +27,13 @@
         
         public override async Task HandleAsync(MessageConsumerContext context)
         {
-            var tasks = context.MessageContexts.Select(async message =>
+            var tasks = context.ConsumerRecords.Select(async message =>
             {
-                var value = message.Message.Value<AccountCreated>();
+                var value = message.Value<AccountCreated>();
                 
                 _logger.LogInformation("{MessageId} - {MessagePayload}",
-                    message.Message.MessageId,
-                    message.Message.ValueAsJsonString());
+                    message.MessageId,
+                    message.ValueAsJsonString());
                 
                 await Task.Delay(250);
             });

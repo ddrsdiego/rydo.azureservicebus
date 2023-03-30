@@ -14,15 +14,16 @@
 
         public MessageRecord(string messageId, string partitionKey, object messageValue, ServiceBusReceivedMessage receivedMessage)
         {
+            PartitionKey = partitionKey;
             MessageId = messageId;
             _messageValue = messageValue;
             _value = receivedMessage.Body.ToArray();
         }
 
         public readonly string MessageId;
-
+        public readonly string PartitionKey;
+        
         internal bool IsValid { get; set; }
-
         internal MessageConsumerContext MessageConsumerCtx;
 
         /// <summary>

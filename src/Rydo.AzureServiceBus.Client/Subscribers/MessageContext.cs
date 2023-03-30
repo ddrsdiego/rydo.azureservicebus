@@ -4,18 +4,16 @@
     using Azure.Messaging.ServiceBus;
     using Handlers;
 
-    public sealed class MessageContext
+    internal sealed class MessageContext
     {
         private MessageConsumerContext _messageConsumerContext;
 
-        public MessageContext(MessageReceived messageReceived, ServiceBusReceivedMessage receivedMessage)
+        public MessageContext(ServiceBusReceivedMessage receivedMessage)
         {
-            MessageReceived = messageReceived;
             ReceivedMessage = receivedMessage;
         }
 
         public MessageRecord Message;
-        internal readonly MessageReceived MessageReceived;
         internal readonly ServiceBusReceivedMessage ReceivedMessage;
 
         internal void SetMessageRecord(MessageRecord messageRecord)

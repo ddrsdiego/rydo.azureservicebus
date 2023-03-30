@@ -17,5 +17,3 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("81f732be-abd3-40fd-9829-4b0df3d7ce2d")]
 [assembly:InternalsVisibleTo("Rydo.AzureServiceBus.UnitTest")]
-[assembly:InternalsVisibleTo("Rydo.AzureServiceBus.Consumer")]
-[assembly:InternalsVisibleTo("Rydo.AzureServiceBus.Producer")]

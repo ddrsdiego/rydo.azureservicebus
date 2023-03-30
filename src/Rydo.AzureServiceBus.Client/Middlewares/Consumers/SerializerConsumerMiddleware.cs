@@ -20,9 +20,9 @@
         {
             foreach (var messageContext in context.MessageContexts)
             {
-                var partitionKey = messageContext.MessageReceived.PartitionKey;
-                var messageId = messageContext.MessageReceived.MessageId;
-                var rawData = messageContext.MessageReceived.Payload.ToArray();
+                var messageId = messageContext.ReceivedMessage.MessageId;
+                var partitionKey = messageContext.ReceivedMessage.PartitionKey;
+                var rawData = messageContext.ReceivedMessage.Body.ToArray();
 
                 using var streamValue = new MemoryStream(rawData);
                 var messageValue = await JsonSerializer.DeserializeAsync(
@@ -32,7 +32,7 @@
 
                 var messageRecord =
                     new MessageRecord(messageId, partitionKey, messageValue, messageContext.ReceivedMessage);
-                
+
                 messageContext.SetMessageRecord(messageRecord);
             }
 
