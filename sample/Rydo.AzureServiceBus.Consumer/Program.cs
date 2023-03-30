@@ -8,11 +8,11 @@ var sbConnectionString = builder.Configuration.GetConnectionString("ServiceBus")
 
 builder.Services.AddAzureServiceBusClient(config =>
 {
-    // config.Producer.Configure(producers =>
-    // {
-    //     producers.TryAdd("rydo-azureservicebus-account-created");
-    //     producers.TryAdd("rydo-azureservicebus-account-updated");
-    // });
+    config.Producer.Configure(producers =>
+    {
+        producers.AddProducers("rydo-azureservicebus-account-created");
+        producers.AddProducers("rydo-azureservicebus-account-updated");
+    });
 
     config.Consumer.Configure(typeof(Program), consumers =>
     {
