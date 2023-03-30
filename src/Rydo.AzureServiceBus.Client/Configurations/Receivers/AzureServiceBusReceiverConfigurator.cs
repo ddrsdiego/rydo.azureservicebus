@@ -68,7 +68,7 @@
             {
                 foreach (var (topicName, consumerContext) in _receiverContextContainer.Subscriber.Contexts)
                 {
-                    var subscriber = new Subscriber(consumerContext);
+                    var subscriber = new ReceiverListener(consumerContext);
                     _subscriberContainer.AddSubscriber(topicName, subscriber);
                 }
 

@@ -1,30 +1,32 @@
 using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Azure;
 using Rydo.AzureServiceBus.Client.Extensions;
+using Rydo.AzureServiceBus.Consumer;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var sbConnectionString = builder.Configuration.GetConnectionString("ServiceBus");
 
-const string accountUpdatedTopic = "azureservicebus-sample-account-updated";
-const string accountCreatedTopic = "azureservicebus-sample-account-created";
-
 builder.Services.AddAzureServiceBusClient(config =>
 {
     config.Producers.Configure(producers =>
     {
-        producers.AddProducers(accountCreatedTopic);
-        producers.AddProducers(accountUpdatedTopic);
+        producers.AddProducers(TopicNameConstants.AccountCreatedTopic);
+        producers.AddProducers(TopicNameConstants.AccountUpdatedTopic);
     });
 
     config.Receiver.Configure(typeof(Program), queue =>
     {
-        queue.Subscriber.AddSubscriber(accountCreatedTopic, configurator =>
+        queue.Subscriber.AddSubscriber(TopicNameConstants.AccountCreatedTopic, configurator =>
         {
             configurator.BufferSize(1_000);
             configurator.MaxMessages(1_000);
         });
-        queue.Subscriber.AddSubscriber(accountUpdatedTopic);
+    });
+    
+    config.Receiver.Configure(typeof(Program), queue =>
+    {
+        queue.Subscriber.AddSubscriber(TopicNameConstants.AccountUpdatedTopic);
     });
 });
 

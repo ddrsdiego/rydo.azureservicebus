@@ -15,7 +15,7 @@
         }
     }
 
-    [TopicConsumer("azureservicebus-sample-account-created")]
+    [TopicConsumer(TopicNameConstants.AccountCreatedTopic)]
     public class AccountCreatedConsumerHandler : ConsumerHandler<AccountCreated>
     {
         private readonly ILogger<AccountCreatedConsumerHandler> _logger;

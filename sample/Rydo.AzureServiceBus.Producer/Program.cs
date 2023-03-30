@@ -30,7 +30,7 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Assembly.Get
 app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 {
     const int capacity = 100;
-    const string accountCreatedTopic = "azureservicebus-sample-account-created";
+    const string accountCreatedTopic = "azure.servicebus.sample.account-created";
 
     var sender = serviceBusClient.CreateSender(accountCreatedTopic);
     

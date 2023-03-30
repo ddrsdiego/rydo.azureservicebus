@@ -53,7 +53,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
             {
                 foreach (var (topicName, consumerContext) in _subscriberContextContainer.Contexts)
                 {
-                    var subscriber = new Subscriber(consumerContext);
+                    var subscriber = new ReceiverListener(consumerContext);
                     _subscriberContainer.AddSubscriber(topicName, subscriber);
                 }
 

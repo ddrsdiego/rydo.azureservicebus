@@ -6,13 +6,13 @@
     using Azure.Messaging.ServiceBus;
     using Middlewares;
 
-    public interface ISubscriber
+    public interface IReceiverListener
     {
-        ISubscriber ServiceProvider(IServiceProvider serviceProvider);
+        IReceiverListener ServiceProvider(IServiceProvider serviceProvider);
         
-        ISubscriber MiddleExecutor(IMiddlewareExecutor middlewareExecutor);
+        IReceiverListener MiddleExecutor(IMiddlewareExecutor middlewareExecutor);
         
-        ISubscriber ServiceBusClient(ServiceBusClient serviceBusClient);
+        IReceiverListener ServiceBusClient(ServiceBusClient serviceBusClient);
         
         Task<bool> IsRunning { get; set; }
 

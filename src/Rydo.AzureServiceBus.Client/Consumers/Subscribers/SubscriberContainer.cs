@@ -11,10 +11,10 @@
     {
         public SubscriberContainer()
         {
-            Listeners = ImmutableDictionary<string, ISubscriber>.Empty;
+            Listeners = ImmutableDictionary<string, IReceiverListener>.Empty;
         }
 
-        public ImmutableDictionary<string, ISubscriber> Listeners { get; private set; }
+        public ImmutableDictionary<string, IReceiverListener> Listeners { get; private set; }
 
         public IServiceProvider Provider { get; private set; }
 
@@ -33,7 +33,7 @@
             }
         }
 
-        public void AddSubscriber(string topicName, ISubscriber subscriber)
+        public void AddSubscriber(string topicName, IReceiverListener receiverListener)
         {
             if (topicName == null || string.IsNullOrEmpty(topicName))
                 throw new ArgumentNullException(nameof(topicName));
@@ -41,7 +41,7 @@
             if (Listeners.TryGetValue(topicName, out _))
                 throw new InvalidOperationException(nameof(topicName));
 
-            Listeners = Listeners.Add(topicName, subscriber);
+            Listeners = Listeners.Add(topicName, receiverListener);
         }
         
         private static IMiddlewareExecutor BuildMiddlewareExecutor(IServiceProvider provider) =>

@@ -12,9 +12,9 @@
     using Handlers;
     using Middlewares;
 
-    internal sealed class Subscriber : ISubscriber
+    internal sealed class ReceiverListener : IReceiverListener
     {
-        private ILogger<Subscriber> _logger;
+        private ILogger<ReceiverListener> _logger;
         private IServiceProvider _serviceProvider;
         private ServiceBusClient _serviceBusClient;
         private ServiceBusReceiver _receiver;
@@ -25,7 +25,7 @@
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
 
-        internal Subscriber(SubscriberContext subscriberContext)
+        internal ReceiverListener(SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
 
@@ -46,21 +46,21 @@
             _readerTask = Task.Run(ReadFromChannel);
         }
 
-        public ISubscriber ServiceProvider(IServiceProvider serviceProvider)
+        public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _logger = _serviceProvider.GetRequiredService<ILogger<Subscriber>>();
+            _logger = _serviceProvider.GetRequiredService<ILogger<ReceiverListener>>();
 
             return this;
         }
 
-        public ISubscriber MiddleExecutor(IMiddlewareExecutor middlewareExecutor)
+        public IReceiverListener MiddleExecutor(IMiddlewareExecutor middlewareExecutor)
         {
             _middlewareExecutor = middlewareExecutor;
             return this;
         }
 
-        public ISubscriber ServiceBusClient(ServiceBusClient serviceBusClient)
+        public IReceiverListener ServiceBusClient(ServiceBusClient serviceBusClient)
         {
             _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
             return this;
@@ -93,7 +93,7 @@
 
         private void CreateReceiver()
         {
-            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.SubscriberSpecification.SubscriptionName,
+            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.QueueSubscription,
                 new ServiceBusReceiverOptions
                 {
                     PrefetchCount = _subscriberContext.SubscriberSpecification.MaxDelivery,
