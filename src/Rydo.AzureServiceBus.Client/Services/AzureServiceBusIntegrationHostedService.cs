@@ -2,10 +2,9 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Consumers;
+    using Consumers.Subscribers;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Subscribers;
 
     internal sealed class AzureServiceBusIntegrationHostedService : BackgroundService
     {
@@ -14,15 +13,15 @@
         private readonly CancellationTokenSource _source;
         private readonly ISubscriberContainer _subscriberContainer;
         private readonly ILogger<AzureServiceBusIntegrationHostedService> _logger;
-        private readonly IConsumerContextContainer _consumerContextContainer;
+        private readonly ISubscriberContextContainer _subscriberContextContainer;
 
         public AzureServiceBusIntegrationHostedService(ILogger<AzureServiceBusIntegrationHostedService> logger,
-            IConsumerContextContainer consumerContextContainer,
+            ISubscriberContextContainer subscriberContextContainer,
             ISubscriberContainer subscriberContainer)
         {
             _source = new CancellationTokenSource();
             _logger = logger;
-            _consumerContextContainer = consumerContextContainer;
+            _subscriberContextContainer = subscriberContextContainer;
             _subscriberContainer = subscriberContainer;
         }
 
@@ -37,7 +36,7 @@
                     if (!subscriber.IsRunning.IsCompleted)
                         continue;
                     
-                    if (!_consumerContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
+                    if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                         continue;
 
                     if (!await subscriber.IsRunning)

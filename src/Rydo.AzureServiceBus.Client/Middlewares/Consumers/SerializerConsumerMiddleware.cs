@@ -5,9 +5,9 @@
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
+    using Client.Consumers.Subscribers;
     using Handlers;
     using Microsoft.Extensions.Logging;
-    using Subscribers;
 
     internal sealed class SerializerConsumerMiddleware : MessageMiddleware
     {

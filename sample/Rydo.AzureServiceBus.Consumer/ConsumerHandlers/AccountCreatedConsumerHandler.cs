@@ -35,6 +35,8 @@
                 _logger.LogInformation("{MessageId} - {MessagePayload}",
                     message.MessageId,
                     message.ValueAsJsonString());
+
+                await Task.Delay(250, cancellationToken);
             }
         }
     }

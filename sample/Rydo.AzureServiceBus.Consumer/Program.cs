@@ -11,13 +11,21 @@ const string accountCreatedTopic = "azureservicebus-sample-account-created";
 
 builder.Services.AddAzureServiceBusClient(config =>
 {
-    config.Producer.Configure(producers =>
+    config.Producers.Configure(producers =>
     {
         producers.AddProducers(accountCreatedTopic);
         producers.AddProducers(accountUpdatedTopic);
     });
+    
+    config.Queues.Configure(typeof(Program), configurator =>
+    {
+        configurator.QueueName("");
+        configurator.LockDurationInMinutes(600);
+        configurator.AutoDeleteAfterIdleInHours(10);
+        configurator.MaxDeliveryCount(10);
+    });
 
-    config.Consumer.Configure(typeof(Program), consumers =>
+    config.Subscribers.Configure(typeof(Program), consumers =>
     {
         consumers.AddSubscriber(accountCreatedTopic, configurator =>
         {
