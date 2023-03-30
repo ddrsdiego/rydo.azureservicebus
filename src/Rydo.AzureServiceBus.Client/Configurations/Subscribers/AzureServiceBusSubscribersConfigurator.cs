@@ -8,7 +8,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
     using Rydo.AzureServiceBus.Client.Consumers.Subscribers;
     using Rydo.AzureServiceBus.Client.Extensions;
     using Rydo.AzureServiceBus.Client.Middlewares.Extensions;
-    using Rydo.AzureServiceBus.Client.Services;
+    using Services;
 
     internal sealed class AzureServiceBusSubscribersConfigurator : IAzureServiceBusSubscribersConfigurator
     {

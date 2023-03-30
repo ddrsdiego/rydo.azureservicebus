@@ -1,8 +1,9 @@
 namespace Rydo.AzureServiceBus.Client.Configurations
 {
+    using System;
     using Microsoft.Extensions.DependencyInjection;
     using Producers;
-    using Queues;
+    using Receivers;
     using Subscribers;
 
     public sealed class AzureServiceBusClientConfigurator : IAzureServiceBusClientConfigurator
@@ -10,12 +11,12 @@ namespace Rydo.AzureServiceBus.Client.Configurations
         public AzureServiceBusClientConfigurator(IServiceCollection services)
         {
             Producers = new AzureServiceBusProducersConfigurator(services);
-            Queues = new AzureServiceBusQueuesConfigurator(services);
             Subscribers = new AzureServiceBusSubscribersConfigurator(services);
+            Receiver = new AzureServiceBusReceiverConfigurator(services);
         }
 
+        public IAzureServiceBusReceiverConfigurator Receiver { get; }
         public IAzureServiceBusProducersConfigurator Producers { get; }
-        public IAzureServiceBusQueuesConfigurator Queues { get; }
         public IAzureServiceBusSubscribersConfigurator Subscribers { get; }
     }
 }

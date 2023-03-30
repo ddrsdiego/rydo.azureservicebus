@@ -93,8 +93,8 @@
 
         private void CreateReceiver()
         {
-            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.SubscriberSpecification.TopicName,
-                _subscriberContext.SubscriberSpecification.SubscriptionName, new ServiceBusReceiverOptions
+            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.SubscriberSpecification.SubscriptionName,
+                new ServiceBusReceiverOptions
                 {
                     PrefetchCount = _subscriberContext.SubscriberSpecification.MaxDelivery,
                     Identifier = _subscriberContext.SubscriberSpecification.SubscriptionName,

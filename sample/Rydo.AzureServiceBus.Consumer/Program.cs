@@ -16,23 +16,15 @@ builder.Services.AddAzureServiceBusClient(config =>
         producers.AddProducers(accountCreatedTopic);
         producers.AddProducers(accountUpdatedTopic);
     });
-    
-    config.Queues.Configure(typeof(Program), configurator =>
-    {
-        configurator.QueueName("");
-        configurator.LockDurationInMinutes(600);
-        configurator.AutoDeleteAfterIdleInHours(10);
-        configurator.MaxDeliveryCount(10);
-    });
 
-    config.Subscribers.Configure(typeof(Program), consumers =>
+    config.Receiver.Configure(typeof(Program), queue =>
     {
-        consumers.AddSubscriber(accountCreatedTopic, configurator =>
+        queue.Subscriber.AddSubscriber(accountCreatedTopic, configurator =>
         {
             configurator.BufferSize(1_000);
             configurator.MaxMessages(1_000);
         });
-        consumers.AddSubscriber(accountUpdatedTopic);
+        queue.Subscriber.AddSubscriber(accountUpdatedTopic);
     });
 });
 
