@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Consumers\Extensions" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.13.1" />
+      <PackageReference Include="CSharpFunctionalExtensions" Version="2.38.1" />
+      <PackageReference Include="Microsoft.Extensions.Azure" Version="1.6.3" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+      <PackageReference Include="Polly" Version="7.2.3" />
+      <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
+      <PackageReference Include="System.Text.Json" Version="7.0.2" />
+      <PackageReference Include="System.Threading.Channels" Version="7.0.0" />
+    </ItemGroup>
+
+</Project>

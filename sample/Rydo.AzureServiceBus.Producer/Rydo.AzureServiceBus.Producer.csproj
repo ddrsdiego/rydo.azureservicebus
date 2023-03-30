@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Include="..\..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Ardalis.ApiEndpoints" Version="4.0.1" />
+      <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.13.1" />
+      <PackageReference Include="Microsoft.Extensions.Azure" Version="1.6.3" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Rydo.AzureServiceBus.Consumer\Rydo.AzureServiceBus.Consumer.csproj" />
+    </ItemGroup>
+
+</Project>
