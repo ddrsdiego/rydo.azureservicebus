@@ -14,8 +14,7 @@ namespace Rydo.AzureServiceBus.Client.Middlewares
         /// <param name="next">A delegate to the next middleware</param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next,
-            CancellationToken cancellationToken = default);
+        Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next);
     }
 
     public abstract class MessageMiddleware : IMessageMiddleware
@@ -27,7 +26,6 @@ namespace Rydo.AzureServiceBus.Client.Middlewares
         
         protected ILogger Logger { get; }
         
-        public abstract Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next,
-            CancellationToken cancellationToken = default);
+        public abstract Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next);
     }
 }

@@ -116,7 +116,8 @@
                 {
                     var counter = 0;
 
-                    var messageConsumerContext = new MessageConsumerContext(_consumerContext, _receiver);
+                    var messageConsumerContext =
+                        new MessageConsumerContext(_consumerContext, _receiver, _cancellationToken);
 
                     while (counter < batchCapacity && _queue.Reader.TryRead(out var receivedMessage))
                     {

@@ -7,14 +7,14 @@
     {
         public string AccountNumber { get; }
         public DateTime CreatedAt { get; }
-        
+
         public AccountCreated(string accountNumber)
         {
             CreatedAt = DateTime.Now;
             AccountNumber = accountNumber;
-        }   
+        }
     }
-    
+
     [TopicConsumer("azureservicebus-sample-account-created")]
     public class AccountCreatedConsumerHandler : ConsumerHandler<AccountCreated>
     {
@@ -24,21 +24,18 @@
         {
             _logger = logger;
         }
-        
-        public override async Task HandleAsync(MessageConsumerContext context)
+
+        public override async Task HandleAsync(MessageConsumerContext context,
+            CancellationToken cancellationToken = default)
         {
-            var tasks = context.ConsumerRecords.Select(async message =>
+            foreach (var message in context.Messages)
             {
                 var value = message.Value<AccountCreated>();
-                
+
                 _logger.LogInformation("{MessageId} - {MessagePayload}",
                     message.MessageId,
                     message.ValueAsJsonString());
-                
-                await Task.Delay(250);
-            });
-
-            await Task.WhenAll(tasks);
+            }
         }
     }
 }

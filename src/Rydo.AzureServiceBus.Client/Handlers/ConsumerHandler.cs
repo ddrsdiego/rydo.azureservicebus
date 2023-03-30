@@ -1,19 +1,20 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Handlers
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public interface IConsumerHandler
     {
         string HandlerId { get; }
-        
-        Task HandleAsync(MessageConsumerContext context);
+
+        Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken = default);
     }
-    
+
     public interface IConsumerHandler<TMessage> : IConsumerHandler
     {
     }
-    
+
     public abstract class ConsumerHandler<TMessage> : IConsumerHandler<TMessage>
     {
         protected ConsumerHandler()
@@ -26,7 +27,7 @@
 
         public string HandlerId { get; }
 
-        public abstract Task HandleAsync(MessageConsumerContext context);
+        public abstract Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken = default);
 
         protected virtual void Dispose(bool disposing)
         {

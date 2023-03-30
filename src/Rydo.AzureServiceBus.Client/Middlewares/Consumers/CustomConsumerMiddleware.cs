@@ -18,10 +18,9 @@
             _serviceProvider = serviceProvider;
         }
 
-        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next,
-            CancellationToken cancellationToken = default)
+        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            if (!context.ConsumerRecords.Any())
+            if (!context.Messages.Any())
             {
                 await next(context);
                 return;
@@ -31,7 +30,7 @@
             if (scope.ServiceProvider.GetService(context.HandlerType ?? throw new InvalidOperationException()) is
                 IConsumerHandler messageHandler)
             {
-                await messageHandler.HandleAsync(context);
+                await messageHandler.HandleAsync(context, context.CancellationToken);
             }
 
             await next(context);

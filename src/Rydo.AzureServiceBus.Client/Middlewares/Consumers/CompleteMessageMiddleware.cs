@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Threading;
     using System.Threading.Tasks;
     using Handlers;
     using Microsoft.Extensions.Logging;
@@ -14,8 +13,7 @@
         {
         }
 
-        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next,
-            CancellationToken cancellationToken = default)
+        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
             var sw = Stopwatch.StartNew();
 
@@ -23,7 +21,7 @@
             foreach (var messageContext in context.MessageContexts)
             {
                 completeMessageTasks.Add(
-                    context.Receiver.CompleteMessageAsync(messageContext.ReceivedMessage, cancellationToken));
+                    context.Receiver.CompleteMessageAsync(messageContext.ReceivedMessage, context.CancellationToken));
             }
 
             var tasks = completeMessageTasks.ToArray();
@@ -34,8 +32,6 @@
                 if (task.IsCompletedSuccessfully)
                     continue;
 
-                Logger.LogWarning("[{LogType}]",
-                    "SLOW_COMPLETE_MESSAGE");
                 await SlowCompleteMessage(task);
             }
 

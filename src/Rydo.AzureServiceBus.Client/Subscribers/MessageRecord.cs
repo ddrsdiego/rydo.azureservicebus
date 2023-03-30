@@ -12,7 +12,8 @@
         private readonly byte[] _key;
         private readonly ReadOnlyMemory<byte> _value;
 
-        public MessageRecord(string messageId, string partitionKey, object messageValue, ServiceBusReceivedMessage receivedMessage)
+        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid,
+            ServiceBusReceivedMessage receivedMessage)
         {
             PartitionKey = partitionKey;
             MessageId = messageId;
@@ -22,9 +23,18 @@
 
         public readonly string MessageId;
         public readonly string PartitionKey;
-        
         internal bool IsValid { get; set; }
+        internal bool IsInvalid => !IsValid;
+        
         internal MessageConsumerContext MessageConsumerCtx;
+
+        internal static MessageRecord GetInstance(string messageId, string partitionKey, object messageValue,
+            ServiceBusReceivedMessage receivedMessage) =>
+            new MessageRecord(messageId, partitionKey, messageValue, true, receivedMessage);
+        
+        internal static MessageRecord GetInvalidInstance(string messageId, string partitionKey, object messageValue,
+            ServiceBusReceivedMessage receivedMessage) =>
+            new MessageRecord(messageId, partitionKey, null, false, receivedMessage);
 
         /// <summary>
         /// Get the raw message contained in the Value field
@@ -55,7 +65,7 @@
                 JsonSerializer.Serialize(_messageValue);
             return valueAsJsonString;
         }
-        
+
         internal void SetMessageConsumerContext(MessageConsumerContext messageConsumerContext)
         {
             MessageConsumerCtx =
