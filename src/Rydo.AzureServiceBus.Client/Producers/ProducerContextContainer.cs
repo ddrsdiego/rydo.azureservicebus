@@ -21,9 +21,9 @@
 
         public ImmutableDictionary<string, ProducerContext> Entries { get; private set; }
 
-        public void TryAdd(string topicName)
+        public void AddProducers(string topicName)
         {
-            TryAdd(topicName, configurator =>
+            AddProducers(topicName, configurator =>
             {
                 configurator.Options = new JsonSerializerOptions
                 {
@@ -34,7 +34,7 @@
             });
         }
 
-        public void TryAdd(string topicName, Action<IProducerConfigurator> configurator)
+        public void AddProducers(string topicName, Action<IProducerConfigurator> configurator)
         {
             if (string.IsNullOrWhiteSpace(topicName)) throw new ArgumentNullException(nameof(topicName));
 

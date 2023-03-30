@@ -5,9 +5,9 @@
 
     public interface IProducerContextContainer
     {
-        void TryAdd(string topicName);
+        void AddProducers(string topicName);
 
-        void TryAdd(string topicName, Action<IProducerConfigurator> configurator);
+        void AddProducers(string topicName, Action<IProducerConfigurator> configurator);
 
         ImmutableDictionary<string, ProducerContext> Entries { get; }
     }

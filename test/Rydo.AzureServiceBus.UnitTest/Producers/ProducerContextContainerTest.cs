@@ -16,9 +16,9 @@
             var services = new ServiceCollection();
 
             var sut = new ProducerContextContainer(services);
-            sut.TryAdd(topicName);
+            sut.AddProducers(topicName);
 
-            Assert.Throws<InvalidOperationException>(() => sut.TryAdd(topicName));
+            Assert.Throws<InvalidOperationException>(() => sut.AddProducers(topicName));
         }
 
         [Test]
@@ -27,7 +27,7 @@
             var services = new ServiceCollection();
 
             var sut = new ProducerContextContainer(services);
-            Assert.Throws<ArgumentNullException>(() => sut.TryAdd(string.Empty));
+            Assert.Throws<ArgumentNullException>(() => sut.AddProducers(string.Empty));
         }
 
         [Test]
@@ -37,7 +37,7 @@
 
             var sut = new ProducerContextContainer(services);
 
-            Assert.Throws<ArgumentNullException>(() => sut.TryAdd(null));
+            Assert.Throws<ArgumentNullException>(() => sut.AddProducers(null));
         }
 
         [Test]
@@ -48,7 +48,7 @@
             services.AddLogging();
 
             var sut = new ProducerContextContainer(services);
-            sut.TryAdd("rydo-azureservicebus-account-created");
+            sut.AddProducers("rydo-azureservicebus-account-created");
 
             var serviceProvider = services.BuildServiceProvider();
 
