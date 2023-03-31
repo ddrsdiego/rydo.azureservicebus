@@ -1,6 +1,5 @@
 namespace Rydo.AzureServiceBus.Client.Middlewares
 {
-    using System.Threading;
     using System.Threading.Tasks;
     using Handlers;
     using Microsoft.Extensions.Logging;

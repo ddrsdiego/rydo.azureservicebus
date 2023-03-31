@@ -2,28 +2,27 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Consumers;
+    using Consumers.Subscribers;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Subscribers;
 
     internal sealed class AzureServiceBusIntegrationHostedService : BackgroundService
     {
         private const int MillisecondsDelayToStartConsumer = 5_000;
         
         private readonly CancellationTokenSource _source;
-        private readonly ISubscriberContainer _subscriberContainer;
+        private readonly IReceiverListenerContainer _receiverListenerContainer;
         private readonly ILogger<AzureServiceBusIntegrationHostedService> _logger;
-        private readonly IConsumerContextContainer _consumerContextContainer;
+        private readonly ISubscriberContextContainer _subscriberContextContainer;
 
         public AzureServiceBusIntegrationHostedService(ILogger<AzureServiceBusIntegrationHostedService> logger,
-            IConsumerContextContainer consumerContextContainer,
-            ISubscriberContainer subscriberContainer)
+            ISubscriberContextContainer subscriberContextContainer,
+            IReceiverListenerContainer receiverListenerContainer)
         {
             _source = new CancellationTokenSource();
             _logger = logger;
-            _consumerContextContainer = consumerContextContainer;
-            _subscriberContainer = subscriberContainer;
+            _subscriberContextContainer = subscriberContextContainer;
+            _receiverListenerContainer = receiverListenerContainer;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,12 +31,12 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                foreach (var (topicName, subscriber) in _subscriberContainer.Listeners)
+                foreach (var (topicName, subscriber) in _receiverListenerContainer.Listeners)
                 {
                     if (!subscriber.IsRunning.IsCompleted)
                         continue;
                     
-                    if (!_consumerContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
+                    if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                         continue;
 
                     if (!await subscriber.IsRunning)

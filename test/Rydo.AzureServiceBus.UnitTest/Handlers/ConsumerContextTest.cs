@@ -1,6 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Handlers
 {
-    using Client.Consumers;
+    using Client.Consumers.Subscribers;
     using NUnit.Framework;
 
     internal sealed class ConsumerSpecificationBuilderTest
@@ -41,9 +41,9 @@
             return this;
         }
 
-        public ConsumerSpecification Build()
+        public SubscriberSpecification Build()
         {
-            return new ConsumerSpecification(_topicName, _subscriptionName, _maxDelivery, _lockDurationInMinutes,
+            return new SubscriberSpecification(_topicName, _subscriptionName, _maxDelivery, _lockDurationInMinutes,
                 _maxDeliveryCount);
         }
     }

@@ -1,7 +1,7 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Consumers
 {
     using Client.Configurations;
-    using Client.Consumers;
+    using Client.Consumers.Subscribers;
     using FluentAssertions;
     using NUnit.Framework;
 
@@ -10,7 +10,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_When_BufferSize_Equals_Zero()
         {
-            var builder = new ConsumerConfiguratorBuilder("topic-name");
+            var builder = new SubscriberConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder
                 .BufferSize(0)
                 .Build();
@@ -23,7 +23,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_With_Invalid_MaxDeliveryCount()
         {
-            var builder = new ConsumerConfiguratorBuilder("topic-name");
+            var builder = new SubscriberConfiguratorBuilder("topic-name");
             const string subscriptionName = "rydo.azure.servicebus.unittest.consumers";
             
             var consumerConfigurator = builder
@@ -45,7 +45,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_With_Users_Valid()
         {
-            var builder = new ConsumerConfiguratorBuilder("topic-name");
+            var builder = new SubscriberConfiguratorBuilder("topic-name");
             const string subscriptionName = "rydo.azure.servicebus.unittest.consumers";
             
             var consumerConfigurator = builder
@@ -67,7 +67,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_With_BufferSize()
         {
-            var builder = new ConsumerConfiguratorBuilder("topic-name");
+            var builder = new SubscriberConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder
                 .BufferSize(1_000)
                 .Build();
@@ -80,7 +80,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_With_Default_Values()
         {
-            var builder = new ConsumerConfiguratorBuilder("topic-name");
+            var builder = new SubscriberConfiguratorBuilder("topic-name");
             var consumerConfigurator = builder.Build();
 
             consumerConfigurator.Value.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);

@@ -3,7 +3,7 @@
     using System.Text.Json;
     using Azure.Messaging.ServiceBus;
     using Azure.Messaging.ServiceBus.Administration;
-    using Client.Consumers;
+    using Client.Consumers.Subscribers;
 
     internal sealed class AccountUpdatedSubscriptionWorker : BackgroundService
     {
@@ -13,18 +13,18 @@
         private ServiceBusReceiver? _receiver;
         private readonly ServiceBusClient _serviceBusClient;
         private readonly ServiceBusAdministrationClient _administrationClient;
-        private readonly IConsumerContextContainer _consumerContextContainer;
+        private readonly ISubscriberContextContainer _subscriberContextContainer;
         private readonly ILogger<AccountUpdatedSubscriptionWorker> _logger;
 
         public AccountUpdatedSubscriptionWorker(ILogger<AccountUpdatedSubscriptionWorker> logger,
             ServiceBusClient serviceBusClient,
             ServiceBusAdministrationClient administrationClient,
-            IConsumerContextContainer consumerContextContainer)
+            ISubscriberContextContainer subscriberContextContainer)
         {
             _logger = logger;
             _serviceBusClient = serviceBusClient;
             _administrationClient = administrationClient;
-            _consumerContextContainer = consumerContextContainer;
+            _subscriberContextContainer = subscriberContextContainer;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)

@@ -1,9 +1,14 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Configurations
 {
+    using System;
+    using Producers;
+    using Receivers;
+    using Subscribers;
+
     public interface IAzureServiceBusClientConfigurator
     {
-        IAzureServiceBusProducerConfigurator Producer { get; }
-
-        IAzureServiceBusConsumerConfigurator Consumer { get; }
+        IAzureServiceBusReceiverConfigurator Receiver { get; }
+        IAzureServiceBusProducersConfigurator Producers { get; }
+        IAzureServiceBusSubscribersConfigurator Subscribers { get; }
     }
 }

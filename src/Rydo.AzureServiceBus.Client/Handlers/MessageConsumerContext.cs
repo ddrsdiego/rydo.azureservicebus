@@ -5,15 +5,14 @@
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Azure.Messaging.ServiceBus;
-    using Consumers;
-    using Subscribers;
+    using Consumers.Subscribers;
 
     public sealed class MessageConsumerContext
     {
         private readonly object _syncLock;
         private readonly LinkedList<MessageContext> _messageContexts;
 
-        public MessageConsumerContext(ConsumerContext subscriverContext, ServiceBusReceiver receiver,
+        public MessageConsumerContext(SubscriberContext subscriverContext, ServiceBusReceiver receiver,
             CancellationToken cancellationToken)
         {
             Count = 0;
@@ -25,7 +24,7 @@
         }
 
         internal readonly ServiceBusReceiver Receiver;
-        internal readonly ConsumerContext SubscriverContext;
+        internal readonly SubscriberContext SubscriverContext;
         internal readonly CancellationToken CancellationToken;
 
         internal Type HandlerType => SubscriverContext.HandlerType;

@@ -15,7 +15,7 @@
         }
     }
 
-    [TopicConsumer("azureservicebus-sample-account-created")]
+    [TopicConsumer(TopicNameConstants.AccountCreatedTopic)]
     public class AccountCreatedConsumerHandler : ConsumerHandler<AccountCreated>
     {
         private readonly ILogger<AccountCreatedConsumerHandler> _logger;
@@ -35,6 +35,8 @@
                 _logger.LogInformation("{MessageId} - {MessagePayload}",
                     message.MessageId,
                     message.ValueAsJsonString());
+
+                await Task.Delay(250, cancellationToken);
             }
         }
     }

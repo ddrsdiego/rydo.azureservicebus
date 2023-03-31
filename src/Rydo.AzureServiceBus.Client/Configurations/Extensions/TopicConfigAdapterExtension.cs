@@ -1,4 +1,4 @@
-namespace Rydo.AzureServiceBus.Client.Configurations
+namespace Rydo.AzureServiceBus.Client.Configurations.Extensions
 {
     using System;
 
