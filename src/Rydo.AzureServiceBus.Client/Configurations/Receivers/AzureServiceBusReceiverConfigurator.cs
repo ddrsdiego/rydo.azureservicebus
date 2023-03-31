@@ -13,13 +13,13 @@
     internal sealed class AzureServiceBusReceiverConfigurator : IAzureServiceBusReceiverConfigurator
     {
         private readonly IServiceCollection _services;
-        private readonly ISubscriberContainer _subscriberContainer;
+        private readonly IReceiverListenerContainer _receiverListenerContainer;
         private readonly IReceiverContextContainer _receiverContextContainer;
 
         public AzureServiceBusReceiverConfigurator(IServiceCollection services)
         {
             _services = services;
-            _subscriberContainer = new SubscriberContainer();
+            _receiverListenerContainer = new ReceiverListenerContainer();
             _receiverContextContainer = new ReceiverContextContainer(services);
         }
 
@@ -55,8 +55,8 @@
             _services.AddSingleton(ConfigureConsumerContextContainer());
             _services.AddSingleton(sp =>
             {
-                _subscriberContainer.SetServiceProvider(sp);
-                return _subscriberContainer;
+                _receiverListenerContainer.SetServiceProvider(sp);
+                return _receiverListenerContainer;
             });
 
             _services.TryAddSingleton(_receiverContextContainer);
@@ -69,7 +69,7 @@
                 foreach (var (topicName, consumerContext) in _receiverContextContainer.Subscriber.Contexts)
                 {
                     var subscriber = new ReceiverListener(consumerContext);
-                    _subscriberContainer.AddSubscriber(topicName, subscriber);
+                    _receiverListenerContainer.AddSubscriber(topicName, subscriber);
                 }
 
                 return _receiverContextContainer.Subscriber;

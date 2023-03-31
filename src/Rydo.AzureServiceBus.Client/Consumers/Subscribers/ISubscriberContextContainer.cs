@@ -14,6 +14,11 @@
 
         void AddSubscriber(string topicName, Action<SubscriberConfiguratorBuilder> configurator);
 
+        void AddSubscriber(string topicName, string subscriptionName);
+
+        void AddSubscriber(string topicName, string subscriptionName,
+            Action<SubscriberConfiguratorBuilder> configurator);
+
         bool TryGetConsumerContext(string topicName, out SubscriberContext context);
     }
 
@@ -24,7 +29,7 @@
         bool NeverAutoDelete { get; set; }
 
         int AutoDeleteAfterIdleInHours { get; set; }
-        
+
         int MaxMessages { get; set; }
 
         int BufferSize { get; set; }

@@ -7,9 +7,9 @@
     using Microsoft.Extensions.Logging;
     using Middlewares;
 
-    public sealed class SubscriberContainer : ISubscriberContainer
+    public sealed class ReceiverListenerContainer : IReceiverListenerContainer
     {
-        public SubscriberContainer()
+        public ReceiverListenerContainer()
         {
             Listeners = ImmutableDictionary<string, IReceiverListener>.Empty;
         }

@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Immutable;
 
-    public interface ISubscriberContainer
+    public interface IReceiverListenerContainer
     {
         IServiceProvider Provider { get; }
 

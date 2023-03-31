@@ -24,10 +24,10 @@ builder.Services.AddAzureServiceBusClient(config =>
         });
     });
     
-    config.Receiver.Configure(typeof(Program), queue =>
-    {
-        queue.Subscriber.AddSubscriber(TopicNameConstants.AccountUpdatedTopic);
-    });
+    // config.Receiver.Configure(typeof(Program), queue =>
+    // {
+    //     queue.Subscriber.AddSubscriber(TopicNameConstants.AccountUpdatedTopic);
+    // });
 });
 
 builder.Services.AddAzureClients(config => { config.AddServiceBusClient(sbConnectionString); });

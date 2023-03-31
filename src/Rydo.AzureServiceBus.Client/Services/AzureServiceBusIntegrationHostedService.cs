@@ -11,18 +11,18 @@
         private const int MillisecondsDelayToStartConsumer = 5_000;
         
         private readonly CancellationTokenSource _source;
-        private readonly ISubscriberContainer _subscriberContainer;
+        private readonly IReceiverListenerContainer _receiverListenerContainer;
         private readonly ILogger<AzureServiceBusIntegrationHostedService> _logger;
         private readonly ISubscriberContextContainer _subscriberContextContainer;
 
         public AzureServiceBusIntegrationHostedService(ILogger<AzureServiceBusIntegrationHostedService> logger,
             ISubscriberContextContainer subscriberContextContainer,
-            ISubscriberContainer subscriberContainer)
+            IReceiverListenerContainer receiverListenerContainer)
         {
             _source = new CancellationTokenSource();
             _logger = logger;
             _subscriberContextContainer = subscriberContextContainer;
-            _subscriberContainer = subscriberContainer;
+            _receiverListenerContainer = receiverListenerContainer;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,7 +31,7 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                foreach (var (topicName, subscriber) in _subscriberContainer.Listeners)
+                foreach (var (topicName, subscriber) in _receiverListenerContainer.Listeners)
                 {
                     if (!subscriber.IsRunning.IsCompleted)
                         continue;

@@ -13,13 +13,13 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
     internal sealed class AzureServiceBusSubscribersConfigurator : IAzureServiceBusSubscribersConfigurator
     {
         private readonly IServiceCollection _services;
-        private readonly ISubscriberContainer _subscriberContainer;
+        private readonly IReceiverListenerContainer _receiverListenerContainer;
         private readonly ISubscriberContextContainer _subscriberContextContainer;
 
         public AzureServiceBusSubscribersConfigurator(IServiceCollection services)
         {
             _services = services;
-            _subscriberContainer = new SubscriberContainer();
+            _receiverListenerContainer = new ReceiverListenerContainer();
             _subscriberContextContainer = new SubscriberContextContainer(_services);
         }
 
@@ -40,8 +40,8 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
             _services.AddSingleton(ConfigureConsumerContextContainer());
             _services.AddSingleton(serviceProvider =>
             {
-                _subscriberContainer.SetServiceProvider(serviceProvider);
-                return _subscriberContainer;
+                _receiverListenerContainer.SetServiceProvider(serviceProvider);
+                return _receiverListenerContainer;
             });
 
             _services.AddHostedService<AzureServiceBusIntegrationHostedService>();
@@ -54,7 +54,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
                 foreach (var (topicName, consumerContext) in _subscriberContextContainer.Contexts)
                 {
                     var subscriber = new ReceiverListener(consumerContext);
-                    _subscriberContainer.AddSubscriber(topicName, subscriber);
+                    _receiverListenerContainer.AddSubscriber(topicName, subscriber);
                 }
 
                 return _subscriberContextContainer;

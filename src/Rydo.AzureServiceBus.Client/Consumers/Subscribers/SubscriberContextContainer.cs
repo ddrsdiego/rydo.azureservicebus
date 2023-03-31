@@ -27,10 +27,17 @@
 
         public void AddSubscriber(string topicName) => AddSubscriber(topicName, configurator => configurator.Build());
 
-        public void AddSubscriber(string topicName, Action<SubscriberConfiguratorBuilder> configurator)
+        public void AddSubscriber(string topicName, string subscriptionName) =>
+            AddSubscriber(topicName, string.Empty, configurator => configurator.Build());
+
+        public void AddSubscriber(string topicName, Action<SubscriberConfiguratorBuilder> configurator) =>
+            AddSubscriber(topicName, string.Empty, configurator);
+
+        public void AddSubscriber(string topicName, string subscriptionName,
+            Action<SubscriberConfiguratorBuilder> configurator)
         {
             if (Contexts.TryGetValue(topicName, out var _)) throw new InvalidOperationException(nameof(topicName));
-            
+
             var result = _types.TryExtractCustomerHandlers(topicName);
             if (result.IsFailure)
                 return;
@@ -42,9 +49,12 @@
                 ? builder.Build().Value
                 : builder.ConsumerConfigurator;
 
-            var subscriptionName = string.IsNullOrWhiteSpace(consumerConfigurator.SubscriptionName)
-                ? GetSubscriptionName(consumerConfigurator, _types.First())
-                : consumerConfigurator.SubscriptionName;
+            if (string.IsNullOrEmpty(subscriptionName))
+            {
+                subscriptionName = string.IsNullOrWhiteSpace(consumerConfigurator.SubscriptionName)
+                    ? GetSubscriptionName(consumerConfigurator, _types.First())
+                    : consumerConfigurator.SubscriptionName;
+            }
 
             var consumerSpecification = new SubscriberSpecification(topicName, subscriptionName,
                 consumerConfigurator.MaxMessages,
