@@ -19,7 +19,7 @@
 
         public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            if (!context.Messages.Any())
+            if (!context.AnyMessage)
             {
                 await next(context);
                 return;
