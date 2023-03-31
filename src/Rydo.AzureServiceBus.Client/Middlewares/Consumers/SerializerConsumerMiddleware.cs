@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -18,15 +19,20 @@
 
         public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            foreach (var messageContext in context.MessageContexts)
+            if (!context.AnyMessage)
+                await next(context);
+            
+            var messages = context.MessageContexts.ToArray();
+            for (var index = 0; index < messages.Length; index++)
             {
-                var valueTask = messageContext.ToMessageRecord(context.SubscriverContext.ContractType,
+                var messageContext = messages[index];
+                var valueTask = messageContext.ToMessageRecord(context.SubscriberContext.ContractType,
                     context.CancellationToken);
 
                 var messageRecord = valueTask.IsCompletedSuccessfully
-                    ? valueTask.Result 
+                    ? valueTask.Result
                     : SlowAdapter(valueTask).Result;
-                
+
                 messageContext.SetMessageRecord(messageRecord);
             }
 

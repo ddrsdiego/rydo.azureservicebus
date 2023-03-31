@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Azure.Messaging.ServiceBus;
@@ -9,38 +10,42 @@
 
     public sealed class MessageConsumerContext
     {
+        private int _count;
         private readonly object _syncLock;
         private readonly LinkedList<MessageContext> _messageContexts;
 
-        public MessageConsumerContext(SubscriberContext subscriverContext, ServiceBusReceiver receiver,
+        public MessageConsumerContext(SubscriberContext subscriberContext, ServiceBusReceiver receiver,
             CancellationToken cancellationToken)
         {
             Count = 0;
             _syncLock = new object();
             CancellationToken = cancellationToken;
-            SubscriverContext = subscriverContext;
+            SubscriberContext = subscriberContext;
             Receiver = receiver;
             _messageContexts = new LinkedList<MessageContext>();
         }
 
         internal readonly ServiceBusReceiver Receiver;
-        internal readonly SubscriberContext SubscriverContext;
+        internal readonly SubscriberContext SubscriberContext;
         internal readonly CancellationToken CancellationToken;
 
-        internal Type HandlerType => SubscriverContext.HandlerType;
-        internal Type ContractType => SubscriverContext.ContractType;
+        internal Type HandlerType => SubscriberContext.HandlerType;
+        internal Type ContractType => SubscriberContext.ContractType;
 
         internal void Add(MessageContext messageContext)
         {
+            var id = Interlocked.Increment(ref _count);
             lock (_syncLock)
             {
                 messageContext.SetMessageConsumerContext(this);
                 _messageContexts.AddLast(messageContext);
-                Count++;
+                Count = id;
             }
         }
 
         public int Count { get; private set; }
+
+        public bool AnyMessage => Count > 0;
 
         public IEnumerable<MessageRecord> Messages
         {
