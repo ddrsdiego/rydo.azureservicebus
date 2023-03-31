@@ -1,7 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Middlewares.Consumers
 {
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
     using Handlers;
     using Microsoft.Extensions.DependencyInjection;

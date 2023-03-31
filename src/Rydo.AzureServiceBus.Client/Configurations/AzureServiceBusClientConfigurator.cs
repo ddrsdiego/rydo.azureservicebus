@@ -1,6 +1,5 @@
 namespace Rydo.AzureServiceBus.Client.Configurations
 {
-    using System;
     using Microsoft.Extensions.DependencyInjection;
     using Producers;
     using Receivers;

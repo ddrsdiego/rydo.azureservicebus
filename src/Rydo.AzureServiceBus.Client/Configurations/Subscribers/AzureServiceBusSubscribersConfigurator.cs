@@ -3,8 +3,10 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Logging.Observers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Logging;
     using Rydo.AzureServiceBus.Client.Consumers.Subscribers;
     using Rydo.AzureServiceBus.Client.Extensions;
     using Rydo.AzureServiceBus.Client.Middlewares.Extensions;
@@ -29,13 +31,13 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
         public void Configure(IEnumerable<Type> types, Action<ISubscriberContextContainer> container)
         {
             var enumerableTypes = types as Type[] ?? types.ToArray();
-            
+
             _subscriberContextContainer.WithTypes(enumerableTypes);
             container(_subscriberContextContainer);
-            
+
             foreach (var handlerType in enumerableTypes.GetHandlerTypes())
                 _services.TryAddScoped(handlerType ?? throw new InvalidOperationException());
-            
+
             _services.AddMiddlewares();
             _services.AddSingleton(ConfigureConsumerContextContainer());
             _services.AddSingleton(serviceProvider =>
@@ -53,7 +55,11 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
             {
                 foreach (var (topicName, consumerContext) in _subscriberContextContainer.Contexts)
                 {
-                    var subscriber = new ReceiverListener(consumerContext);
+                    var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+
+                    var receiverListenerLogger = loggerFactory.CreateLogger<ReceiverListener>();
+
+                    var subscriber = new ReceiverListener(receiverListenerLogger, consumerContext);
                     _receiverListenerContainer.AddSubscriber(topicName, subscriber);
                 }
 

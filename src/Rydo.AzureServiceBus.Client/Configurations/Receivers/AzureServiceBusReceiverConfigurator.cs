@@ -3,10 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Abstractions.Observers.Observables;
     using Client.Extensions;
     using Consumers.Subscribers;
+    using Logging.Observers;
+    using Metrics.Observers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.Extensions.Logging;
     using Middlewares.Extensions;
     using Services;
 
@@ -68,11 +72,26 @@
             {
                 foreach (var (topicName, consumerContext) in _receiverContextContainer.Subscriber.Contexts)
                 {
-                    var subscriber = new ReceiverListener(consumerContext);
-                    _receiverListenerContainer.AddSubscriber(topicName, subscriber);
+                    var receiverListener = CreateReceiverListener(sp, consumerContext);
+                    ConnectObservers(sp, receiverListener);
+
+                    _receiverListenerContainer.AddSubscriber(topicName, receiverListener);
                 }
 
                 return _receiverContextContainer.Subscriber;
             };
+
+        private static void ConnectObservers(IServiceProvider sp, IReceiverListener receiverListener)
+        {
+            var logLoggingReceiveObserver = sp.GetRequiredService<ILogger<LoggingReceiveObserver>>();
+            receiverListener.ConnectReceiveObserver(new LoggingReceiveObserver(logLoggingReceiveObserver));
+        }
+
+        private static ReceiverListener CreateReceiverListener(IServiceProvider sp, SubscriberContext consumerContext)
+        {
+            var receiverListenerLogger = sp.GetRequiredService<ILogger<ReceiverListener>>();
+            var receiverListener = new ReceiverListener(receiverListenerLogger, consumerContext);
+            return receiverListener;
+        }
     }
 }
