@@ -78,7 +78,7 @@
                     await _receiver.ReceiveMessagesAsync(_subscriberContext.SubscriberSpecification.MaxDelivery,
                         cancellationToken: stoppingToken);
 
-                if (receivedMessages == null && receivedMessages.Count == 0)
+                if (receivedMessages == null || receivedMessages.Count == 0)
                     continue;
 
                 var messages = receivedMessages.ToArray();
