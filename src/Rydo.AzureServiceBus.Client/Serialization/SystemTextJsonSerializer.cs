@@ -1,7 +1,9 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Serialization
 {
+    using System;
     using System.IO;
     using System.Text.Json;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
 
@@ -26,18 +28,29 @@
             return JsonSerializer.Deserialize<T>(data, _options);
         }
 
-        public async ValueTask<byte[]> SerializeAsync<T>(T obj)
+        public async ValueTask<byte[]> SerializeAsync<T>(T obj, CancellationToken cancellationToken = default)
         {
             using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, obj, _options);
+            await JsonSerializer.SerializeAsync(stream, obj, _options, cancellationToken);
 
             return stream.ToArray();
         }
 
-        public async ValueTask<T> DeserializeAsync<T>(byte[] data)
+        public async ValueTask<T> DeserializeAsync<T>(byte[] data, CancellationToken cancellationToken = default)
         {
             using var stream = new MemoryStream(data);
-            return await JsonSerializer.DeserializeAsync<T>(stream, _options);
+            return await JsonSerializer.DeserializeAsync<T>(stream, _options, cancellationToken);
+        }
+
+        public async ValueTask<object> DeserializeAsync(byte[] data, Type type,
+            CancellationToken cancellationToken = default)
+        {
+            using var streamValue = new MemoryStream(data);
+            var messageValue = await JsonSerializer
+                .DeserializeAsync(streamValue, type, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            return messageValue;
         }
     }
 }

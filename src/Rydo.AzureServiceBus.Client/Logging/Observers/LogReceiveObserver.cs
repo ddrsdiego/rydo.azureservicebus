@@ -38,7 +38,7 @@
 
         public Task PreReceive(MessageContext context)
         {
-            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
+            _logger.LogDebug($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
                 IncomingMessageReceiverLogType,
                 new MessageContextLog(context));
             

@@ -11,7 +11,7 @@
             var configs = new List<MiddlewareConfiguration>();
 
             configs.Insert(configs.Count,
-                new MiddlewareConfiguration(typeof(SerializerConsumerMiddleware), ServiceLifetime.Scoped));
+                new MiddlewareConfiguration(typeof(DeserializerConsumerMiddleware), ServiceLifetime.Scoped));
 
             configs.Insert(configs.Count,
                 new MiddlewareConfiguration(typeof(CustomConsumerMiddleware), ServiceLifetime.Scoped));

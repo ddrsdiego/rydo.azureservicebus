@@ -3,15 +3,13 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Text.Json;
-    using Azure.Messaging.ServiceBus;
     using Handlers;
 
     public sealed class MessageRecord
     {
         private readonly object _messageValue;
 
-        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid,
-            ServiceBusReceivedMessage receivedMessage)
+        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
         {
             IsValid = isValid;
             MessageId = messageId;
@@ -41,13 +39,11 @@
         
         internal MessageConsumerContext MessageConsumerCtx;
 
-        internal static MessageRecord GetInstance(string messageId, string partitionKey, object messageValue,
-            ServiceBusReceivedMessage receivedMessage) =>
-            new MessageRecord(messageId, partitionKey, messageValue, true, receivedMessage);
+        internal static MessageRecord GetInstance(string messageId, string partitionKey, object messageValue) =>
+            new MessageRecord(messageId, partitionKey, messageValue, true);
         
-        internal static MessageRecord GetInvalidInstance(string messageId, string partitionKey, object messageValue,
-            ServiceBusReceivedMessage receivedMessage) =>
-            new MessageRecord(messageId, partitionKey, null, false, receivedMessage);
+        internal static MessageRecord GetInvalidInstance(string messageId, string partitionKey) =>
+            new MessageRecord(messageId, partitionKey, null, false);
 
         /// <summary>
         /// Get the raw message contained in the Value field

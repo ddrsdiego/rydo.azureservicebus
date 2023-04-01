@@ -35,7 +35,7 @@
             _logger.LogInformation(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageConsumerContextLength} messages completed in {ServiceBusLogFields.ElapsedMilliseconds} ms.",
                 "COMPLETED_MESSAGE",
-                context.Count,
+                context.Length,
                 context.ElapsedTimeConsumer);
 
             return Task.CompletedTask;

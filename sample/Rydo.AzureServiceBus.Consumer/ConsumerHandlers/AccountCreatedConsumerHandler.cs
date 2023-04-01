@@ -1,5 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Consumer.ConsumerHandlers
 {
+    using Client.Consumers.Extensions;
     using Client.Handlers;
     using Client.Topics;
 
@@ -26,17 +27,12 @@
         }
 
         public override async Task HandleAsync(MessageConsumerContext context,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken)
         {
             foreach (var message in context.Messages)
             {
                 var value = message.Value<AccountCreated>();
-
-                // _logger.LogInformation("{MessageId} - {MessagePayload}",
-                //     message.MessageId,
-                //     message.ValueAsJsonString());
-
-                await Task.Delay(250, cancellationToken);
+                await Task.Delay(100, cancellationToken);
             }
         }
     }

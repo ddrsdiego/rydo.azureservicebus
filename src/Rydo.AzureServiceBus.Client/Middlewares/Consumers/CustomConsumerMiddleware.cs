@@ -9,6 +9,7 @@
     internal sealed class CustomConsumerMiddleware : MessageMiddleware
     {
         private readonly IServiceProvider _serviceProvider;
+        private const string CustomHandlerConsumerStep = "CUSTOM-HANDLER-CONSUMER-MESSAGES";
 
         public CustomConsumerMiddleware(ILoggerFactory logger, IServiceProvider serviceProvider)
             : base(logger.CreateLogger<CustomConsumerMiddleware>())
@@ -28,17 +29,23 @@
             if (scope.ServiceProvider.GetService(context.HandlerType ?? throw new InvalidOperationException()) is
                 IConsumerHandler messageHandler)
             {
-                context.StarWatch();
-
                 if (ConsumerMiddlewareObservable.Count > 0)
-                    await ConsumerMiddlewareObservable.PreConsumer(nameof(CustomConsumerMiddleware),"START-CUSTOM-HANDLER-CONSUMER", context);
+                    await ConsumerMiddlewareObservable.PreConsumer(nameof(CustomConsumerMiddleware),
+                        CustomHandlerConsumerStep, context);
 
-                await messageHandler.HandleAsync(context, context.CancellationToken);
+                try
+                {
+                    await messageHandler.HandleAsync(context, context.CancellationToken);
 
-                context.StopWatch();
-                
-                if (ConsumerMiddlewareObservable.Count > 0)
-                    await ConsumerMiddlewareObservable.PostConsumer(nameof(CustomConsumerMiddleware),"FINISH-CUSTOM-HANDLER-CONSUMER", context);
+                    if (ConsumerMiddlewareObservable.Count > 0)
+                        await ConsumerMiddlewareObservable.PostConsumer(nameof(CustomConsumerMiddleware),
+                            CustomHandlerConsumerStep, context);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
             }
 
             await next(context);

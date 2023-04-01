@@ -3,6 +3,8 @@
     using System;
     using Configurations;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Middlewares.Consumers;
 
     public static class RydoAzureServiceBusCollectionExtensions
     {
@@ -11,6 +13,8 @@
         {
             var configurator = new AzureServiceBusClientConfigurator(services);
             clientConfigurator(configurator);
+
+            services.TryAddSingleton<IMessageRecordFactory, MessageRecordFactory>();
 
             // services.AddSingleton(sp => new ServiceBusAdministrationClient(sbConnectionString));
             // services.AddAzureClients(config => { config.AddServiceBusClient(sbConnectionString); });

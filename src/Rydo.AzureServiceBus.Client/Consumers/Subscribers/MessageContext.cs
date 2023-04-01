@@ -13,13 +13,13 @@
             ReceivedMessage = receivedMessage;
         }
 
-        public MessageRecord Message;
+        public MessageRecord Record;
         internal readonly ServiceBusReceivedMessage ReceivedMessage;
 
         internal void SetMessageRecord(MessageRecord messageRecord)
         {
-            Message = messageRecord;
-            Message.SetMessageConsumerContext(_messageConsumerContext);
+            Record = messageRecord;
+            Record.SetMessageConsumerContext(_messageConsumerContext);
         }
 
         internal void SetMessageConsumerContext(MessageConsumerContext context)

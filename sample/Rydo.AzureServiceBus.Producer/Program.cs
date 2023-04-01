@@ -29,7 +29,7 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Assembly.Get
 
 app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 {
-    const int capacity = 100;
+    const int capacity = 1;
     const string accountCreatedTopic = "azure.servicebus.sample.account-created";
 
     var sender = serviceBusClient.CreateSender(accountCreatedTopic);
@@ -40,10 +40,17 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
         var accountNumber = index.ToString("0000000");
 
         var accountCreatedMessage = new AccountCreated(accountNumber);
+
+        var producerName = Assembly.GetExecutingAssembly().GetName().Name;
         var payload = JsonSerializer.SerializeToUtf8Bytes(accountCreatedMessage);
+
         var message = new ServiceBusMessage(payload)
         {
             ContentType = MediaTypeNames.Application.Json,
+            ApplicationProperties =
+            {
+                new KeyValuePair<string, object>("producer", producerName),
+            },
             PartitionKey = accountCreatedMessage.AccountNumber
         };
 

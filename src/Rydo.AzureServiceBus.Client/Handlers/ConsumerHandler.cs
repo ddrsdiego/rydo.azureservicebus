@@ -3,12 +3,13 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Utils;
 
     public interface IConsumerHandler
     {
         string HandlerId { get; }
 
-        Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken = default);
+        Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken);
     }
 
     public interface IConsumerHandler<TMessage> : IConsumerHandler
@@ -19,7 +20,7 @@
     {
         protected ConsumerHandler()
         {
-            HandlerId = Guid.NewGuid().ToString().Split('-')[0];
+            HandlerId = GeneratorOperationId.Generate();
         }
 
         // some fields that require cleanup
@@ -27,7 +28,7 @@
 
         public string HandlerId { get; }
 
-        public abstract Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken = default);
+        public abstract Task HandleAsync(MessageConsumerContext context, CancellationToken cancellationToken);
 
         protected virtual void Dispose(bool disposing)
         {
