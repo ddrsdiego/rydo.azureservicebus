@@ -86,7 +86,7 @@
             while (!stoppingToken.IsCancellationRequested)
             {
                 var receivedMessages =
-                    await _receiver.ReceiveMessagesAsync(_subscriberContext.SubscriberSpecification.MaxDelivery,
+                    await _receiver.ReceiveMessagesAsync(_subscriberContext.Specification.MaxMessages,
                         cancellationToken: stoppingToken);
 
                 if (receivedMessages == null || receivedMessages.Count == 0)
@@ -105,12 +105,11 @@
         private async Task CreateReceiversAsync()
         {
             await _receiveObservable.PreStartReceive(_subscriberContext);
-
-            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.QueueSubscription,
+            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.TopicSubscriptionName,
                 new ServiceBusReceiverOptions
                 {
-                    PrefetchCount = _subscriberContext.SubscriberSpecification.MaxDelivery,
-                    Identifier = _subscriberContext.SubscriberSpecification.SubscriptionName,
+                    PrefetchCount = _subscriberContext.Specification.MaxMessages,
+                    Identifier = _subscriberContext.Specification.SubscriptionName,
                     ReceiveMode = ServiceBusReceiveMode.PeekLock
                 });
 
@@ -129,7 +128,7 @@
 
         private async Task ReadFromChannel()
         {
-            const int batchCapacity = 1_000;
+            var batchCapacity = _subscriberContext.Specification.Consumer.BufferSize;
 
             try
             {

@@ -1,5 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Producers
 {
+    using System;
     using System.Collections.Immutable;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -79,6 +80,34 @@
             var attr = model.GetType().CustomAttributes
                 .SingleOrDefault(x =>
                     x.AttributeType.FullName is TopicProducerAttribute.FullNameTopicProducerAttribute);
+
+            if (attr == null)
+            {
+                topicName = string.Empty;
+                return false;
+            }
+
+            topicName = attr.ConstructorArguments[TopicAttribute.TopicNamePosition].Value.ToString();
+            return true;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool TryExtractTopicNameFromConsumer(this Type model, out string topicName)
+        {
+            topicName = string.Empty;
+
+            if (model == null)
+                return false;
+
+            if (!model.CustomAttributes.Any())
+            {
+                topicName = string.Empty;
+                return false;
+            }
+
+            var attr = model.CustomAttributes
+                .SingleOrDefault(x =>
+                    x.AttributeType.FullName is TopicConsumerAttribute.FullNameTopicConsumerAttribute);
 
             if (attr == null)
             {

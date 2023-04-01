@@ -1,17 +1,12 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Configurations.Receivers
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Client.Extensions;
+    using Client.Producers;
     using Consumers.Subscribers;
-    using Logging.Observers;
-    using Metrics.Observers;
+    using Extensions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Logging;
-    using Middlewares.Extensions;
-    using Services;
 
     internal sealed class AzureServiceBusReceiverConfigurator : IAzureServiceBusReceiverConfigurator
     {
@@ -26,72 +21,45 @@
             _receiverContextContainer = new ReceiverContextContainer(services);
         }
 
-        public void Configure(Type type, Action<IReceiverContextContainer> container)
+        public void Configure<T>() => Configure<T>(c => c.Subscriber.Add());
+
+        public void Configure<T>(Action<IReceiverContextContainer> container)
         {
-            var queueName = type?.Assembly.GetName().Name?.ToLowerInvariant();
-            Configure(new List<Type> {type}, queueName, container);
-        }
+            if (!typeof(T).TryExtractTopicNameFromConsumer(out var topicName))
+                throw new InvalidOperationException("");
 
-        public void Configure(Type type, string queueName, Action<IReceiverContextContainer> container)
-        {
-        }
-
-        public void Configure(IEnumerable<Type> types, Action<IReceiverContextContainer> container)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Configure(IEnumerable<Type> types, string queueName, Action<IReceiverContextContainer> container)
-        {
-            var enumerableTypes = types as Type[] ?? types.ToArray();
-
-            _receiverContextContainer
-                .Subscriber
-                .WithTypes(enumerableTypes);
-
+            _receiverContextContainer.Subscriber.WithConsumerHandler<T>();
             container(_receiverContextContainer);
 
-            foreach (var handlerType in enumerableTypes.GetHandlerTypes())
-                _services.TryAddScoped(handlerType ?? throw new InvalidOperationException());
-
-            _services.AddMiddlewares();
-            _services.AddSingleton(ConfigureConsumerContextContainer());
-            _services.AddSingleton(sp =>
-            {
-                _receiverListenerContainer.SetServiceProvider(sp);
-                return _receiverListenerContainer;
-            });
-
+            _services.TryAddScoped(typeof(T));
             _services.TryAddSingleton(_receiverContextContainer);
-            _services.AddHostedService<AzureServiceBusIntegrationHostedService>();
+            _services.TryAddSingleton(TryResolveReceiverListenerContainer);
+            _services.TryAddSingleton(TryResolveSubscriberContextContainer);
         }
 
-        private Func<IServiceProvider, ISubscriberContextContainer> ConfigureConsumerContextContainer() =>
-            sp =>
-            {
-                foreach (var (topicName, consumerContext) in _receiverContextContainer.Subscriber.Contexts)
-                {
-                    var receiverListener = CreateReceiverListener(sp, consumerContext);
-                    ConnectObservers(sp, receiverListener);
-
-                    _receiverListenerContainer.AddSubscriber(topicName, receiverListener);
-                }
-
-                return _receiverContextContainer.Subscriber;
-            };
-
-        private static void ConnectObservers(IServiceProvider sp, IReceiverListener receiverListener)
+        private IReceiverListenerContainer TryResolveReceiverListenerContainer(IServiceProvider sp)
         {
-            var logLoggingReceiveObserver = sp.GetRequiredService<ILogger<LogReceiveObserver>>();
-            
-            receiverListener.ConnectReceiveObserver(new PrometheusIncomingReceiveObserver());
-            receiverListener.ConnectReceiveObserver(new LogReceiveObserver(logLoggingReceiveObserver));
+            _receiverListenerContainer.SetServiceProvider(sp);
+            return _receiverListenerContainer;
+        }
+
+        private ISubscriberContextContainer TryResolveSubscriberContextContainer(IServiceProvider sp)
+        {
+            foreach (var (topicName, consumerContext) in _receiverContextContainer.Subscriber.Contexts)
+            {
+                var receiverListener = CreateReceiverListener(sp, consumerContext);
+                _receiverListenerContainer.AddSubscriber(topicName, receiverListener);
+            }
+
+            return _receiverContextContainer.Subscriber;
         }
 
         private static ReceiverListener CreateReceiverListener(IServiceProvider sp, SubscriberContext consumerContext)
         {
             var receiverListenerLogger = sp.GetRequiredService<ILogger<ReceiverListener>>();
             var receiverListener = new ReceiverListener(receiverListenerLogger, consumerContext);
+
+            receiverListener.ConnectObservers(sp);
             return receiverListener;
         }
     }

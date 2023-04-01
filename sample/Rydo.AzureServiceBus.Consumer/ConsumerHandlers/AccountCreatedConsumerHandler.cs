@@ -1,6 +1,5 @@
 ﻿namespace Rydo.AzureServiceBus.Consumer.ConsumerHandlers
 {
-    using Client.Consumers.Extensions;
     using Client.Handlers;
     using Client.Topics;
 

@@ -108,7 +108,7 @@
         /// <summary>
         /// Queue or topic binding name.
         /// </summary>
-        public string QueueSubscription => SubscriberContext.QueueSubscription;
+        public string QueueSubscription => SubscriberContext.TopicSubscriptionName;
 
         /// <summary>
         /// List of messages to be processed. The Length and AnyMessage properties indicate if there are messages in the list.

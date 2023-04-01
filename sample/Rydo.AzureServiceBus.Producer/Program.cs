@@ -4,7 +4,8 @@ using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
-using Rydo.AzureServiceBus.Consumer.Models;
+using Rydo.AzureServiceBus.Consumer.ConsumerHandlers;
+using AccountCreated = Rydo.AzureServiceBus.Consumer.Models.AccountCreated;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,40 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
         var accountNumber = index.ToString("0000000");
 
         var accountCreatedMessage = new AccountCreated(accountNumber);
+
+        var producerName = Assembly.GetExecutingAssembly().GetName().Name;
+        var payload = JsonSerializer.SerializeToUtf8Bytes(accountCreatedMessage);
+
+        var message = new ServiceBusMessage(payload)
+        {
+            ContentType = MediaTypeNames.Application.Json,
+            ApplicationProperties =
+            {
+                new KeyValuePair<string, object>("producer", producerName),
+            },
+            PartitionKey = accountCreatedMessage.AccountNumber
+        };
+
+        tasks.Add(sender.SendMessageAsync(message));
+    }
+
+    await Task.WhenAll(tasks);
+    return Results.Accepted();
+});
+
+app.MapPost("api/v1/accounts/banlance", async (ServiceBusClient serviceBusClient) =>
+{
+    const int capacity = 1;
+    const string accountCreatedTopic = "azure.servicebus.sample.account-updated";
+
+    var sender = serviceBusClient.CreateSender(accountCreatedTopic);
+
+    var tasks = new List<Task>(capacity);
+    for (var index = 1; index <= capacity; index++)
+    {
+        var accountNumber = index.ToString("0000000");
+
+        var accountCreatedMessage = new AccountUpdated(accountNumber);
 
         var producerName = Assembly.GetExecutingAssembly().GetName().Name;
         var payload = JsonSerializer.SerializeToUtf8Bytes(accountCreatedMessage);

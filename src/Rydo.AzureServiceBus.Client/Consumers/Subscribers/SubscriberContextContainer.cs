@@ -4,12 +4,14 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
-    using Microsoft.Extensions.DependencyInjection;
     using Extensions;
+    using Microsoft.Extensions.DependencyInjection;
+    using Producers;
 
     internal sealed class SubscriberContextContainer : ISubscriberContextContainer
     {
         private IEnumerable<Type> _types;
+        private Type _consumerHandler;
         private readonly IServiceCollection _services;
 
         public SubscriberContextContainer(IServiceCollection services)
@@ -23,26 +25,31 @@
             _types = types ?? throw new ArgumentNullException(nameof(types));
         }
 
-        public ImmutableDictionary<string, SubscriberContext> Contexts { get; private set; }
+        public void WithConsumerHandler<T>() => _consumerHandler = typeof(T);
 
-        public void AddSubscriber(string topicName) => AddSubscriber(topicName, configurator => configurator.Build());
-
-        public void AddSubscriber(string topicName, string subscriptionName) =>
-            AddSubscriber(topicName, string.Empty, configurator => configurator.Build());
-
-        public void AddSubscriber(string topicName, Action<SubscriberConfiguratorBuilder> configurator) =>
-            AddSubscriber(topicName, string.Empty, configurator);
-
-        public void AddSubscriber(string topicName, string subscriptionName,
-            Action<SubscriberConfiguratorBuilder> configurator)
+        public void Add()
         {
-            if (Contexts.TryGetValue(topicName, out var _)) throw new InvalidOperationException(nameof(topicName));
+            var subscriptionName = _consumerHandler.Assembly.GetName().Name.ToLowerInvariant();
+            Add(subscriptionName, subscriber => subscriber.Build());
+        }
 
-            var result = _types.TryExtractCustomerHandlers(topicName);
+        public void Add(string subscriptionName) => Add(subscriptionName, subscriber => subscriber.Build());
+
+        public void Add(Action<SubscriberConfiguratorBuilder> configurator)
+        {
+            var subscriptionName = _consumerHandler.Assembly.GetName().Name.ToLowerInvariant();
+            Add(subscriptionName, configurator);
+        }
+
+        public void Add(string subscriptionName, Action<SubscriberConfiguratorBuilder> configurator)
+        {
+            _consumerHandler.TryExtractTopicNameFromConsumer(out var topicOrQueueName);
+
+            var result = new List<Type> {_consumerHandler}.TryExtractCustomerHandlers(topicOrQueueName);
             if (result.IsFailure)
                 return;
 
-            var builder = new SubscriberConfiguratorBuilder(topicName);
+            var builder = new SubscriberConfiguratorBuilder(topicOrQueueName, subscriptionName);
             configurator(builder);
 
             var consumerConfigurator = !builder.HasBuild
@@ -56,16 +63,12 @@
                     : consumerConfigurator.SubscriptionName;
             }
 
-            var consumerSpecification = new SubscriberSpecification(topicName, subscriptionName,
-                consumerConfigurator.MaxMessages,
-                consumerConfigurator.LockDurationInMinutes,
-                consumerConfigurator.MaxDeliveryCount);
-
-            var context = new SubscriberContext(consumerSpecification, result.Value.ContractType,
-                result.Value.HandlerType);
-
-            Contexts = Contexts.Add(context.SubscriberSpecification.TopicName, context);
+            var consumerSpecification = new SubscriberSpecification(consumerConfigurator);
+            var context = new SubscriberContext(consumerSpecification, result.Value.ContractType, _consumerHandler);
+            Contexts = Contexts.Add(context.TopicSubscriptionName, context);
         }
+
+        public ImmutableDictionary<string, SubscriberContext> Contexts { get; private set; }
 
         public bool TryGetConsumerContext(string topicName, out SubscriberContext context)
         {

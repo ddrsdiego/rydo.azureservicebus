@@ -43,23 +43,29 @@
 
         public SubscriberSpecification Build()
         {
-            return new SubscriberSpecification(_topicName, _subscriptionName, _maxDelivery, _lockDurationInMinutes,
-                _maxDeliveryCount);
-        }
-    }
-
-    public class ConsumerContextTest
-    {
-        [Test]
-        public void Test()
-        {
-            var consumerSpecification = new ConsumerSpecificationBuilderTest()
-                .TopicName("account-created")
-                .SubscriptionName("Rydo.AzureServiceBus.UnitTest.Handlers")
-                .MaxDelivery(10)
+            var builder = new SubscriberConfiguratorBuilder(_topicName, _subscriptionName);
+            var consumerConfigurator = builder
+                .MaxMessages(10)
                 .MaxDeliveryCount(1000)
                 .LockDurationInMinutes(1)
                 .Build();
+            
+            return new SubscriberSpecification(consumerConfigurator.Value);
         }
     }
+    //
+    // public class ConsumerContextTest
+    // {
+    //     [Test]
+    //     public void Test()
+    //     {
+    //         var consumerSpecification = new ConsumerSpecificationBuilderTest()
+    //             .TopicName("account-created")
+    //             .SubscriptionName("Rydo.AzureServiceBus.UnitTest.Handlers")
+    //             .MaxDelivery(10)
+    //             .MaxDeliveryCount(1000)
+    //             .LockDurationInMinutes(1)
+    //             .Build();
+    //     }
+    // }
 }

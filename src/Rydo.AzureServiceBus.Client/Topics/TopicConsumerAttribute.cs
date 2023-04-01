@@ -1,5 +1,8 @@
 namespace Rydo.AzureServiceBus.Client.Topics
 {
+    using System;
+
+    [AttributeUsage(AttributeTargets.Class)]
     public sealed class TopicConsumerAttribute : TopicAttribute
     {
         public const string FullNameTopicConsumerAttribute =

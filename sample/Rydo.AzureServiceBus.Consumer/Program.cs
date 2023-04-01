@@ -3,6 +3,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Azure;
 using Rydo.AzureServiceBus.Client.Extensions;
 using Rydo.AzureServiceBus.Consumer;
+using Rydo.AzureServiceBus.Consumer.ConsumerHandlers;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
@@ -21,18 +22,15 @@ builder.Services.AddAzureServiceBusClient(config =>
         producers.AddProducers(TopicNameConstants.AccountCreatedTopic);
         producers.AddProducers(TopicNameConstants.AccountUpdatedTopic);
     });
-
-    config.Receiver.Configure(typeof(Program), queue =>
+    config.Receiver.Configure<AccountCreatedConsumerHandler>(receiver =>
     {
-        queue.Subscriber.AddSubscriber(TopicNameConstants.AccountCreatedTopic, configurator =>
+        receiver.Subscriber.Add(sub =>
         {
-            configurator.BufferSize(1_000);
-            configurator.MaxMessages(1_000);
+            sub.BufferSize(1_000);
+            sub.MaxMessages(1_000);
         });
     });
-
-    config.Receiver.Configure(typeof(Program),
-        queue => { queue.Subscriber.AddSubscriber(TopicNameConstants.AccountUpdatedTopic); });
+    config.Receiver.Configure<AccountUpdatedConsumerHandler>();
 });
 
 builder.Services.AddAzureClients(config => { config.AddServiceBusClient(sbConnectionString); });

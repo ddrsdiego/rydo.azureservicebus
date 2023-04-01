@@ -7,6 +7,21 @@
 
     internal static class Ex
     {
+        public static Type GetConsumerHandler(this Type types)
+        {
+            Type handlerTypes = default;
+
+            foreach (var exportedType in types.Assembly.ExportedTypes)
+            {
+                if (!TryGetConsumerHandler(exportedType, out var consumerHandlerType))
+                    continue;
+
+                handlerTypes = consumerHandlerType.HandlerType;
+            }
+
+            return handlerTypes;
+        }
+
         public static IEnumerable<Type> GetHandlerTypes(this IEnumerable<Type> types)
         {
             var handlerTypes = new List<Type>();
