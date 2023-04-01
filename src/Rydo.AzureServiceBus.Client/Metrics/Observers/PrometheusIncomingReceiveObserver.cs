@@ -8,12 +8,17 @@
     {
         public Task PreStartReceive(SubscriberContext context)
         {
-            throw new System.NotImplementedException();
+            return Task.CompletedTask;
         }
 
         public Task PostStartReceive(SubscriberContext context)
         {
-            throw new System.NotImplementedException();
+            return Task.CompletedTask;
+        }
+
+        public Task PreReceive(MessageContext context)
+        {
+            return Task.CompletedTask;
         }
     }
 }

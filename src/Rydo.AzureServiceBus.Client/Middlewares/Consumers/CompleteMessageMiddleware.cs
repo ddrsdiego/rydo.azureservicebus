@@ -17,6 +17,11 @@
         {
             var sw = Stopwatch.StartNew();
 
+            context.StarWatch();
+            
+            if (ConsumerMiddlewareObservable.Count > 0)
+                await ConsumerMiddlewareObservable.PreConsumer(nameof(CompleteMessageMiddleware),"START-COMPLETE-MESSAGE", context);
+            
             var completeMessageTasks = new List<Task>(context.Count);
             foreach (var messageContext in context.MessageContexts)
             {
@@ -35,13 +40,10 @@
                 await SlowCompleteMessage(task);
             }
 
-            sw.Stop();
+            context.StopWatch();
+            if (ConsumerMiddlewareObservable.Count > 0)
+                await ConsumerMiddlewareObservable.PostConsumer(nameof(CompleteMessageMiddleware),"FINISH-COMPLETE-MESSAGE", context);
             
-            Logger.LogInformation("[{LogType}] - {TasksLength} messages completed in {ElapsedMilliseconds} ms.",
-                "COMPLETED_MESSAGE",
-                tasks.Length, 
-                sw.ElapsedMilliseconds);
-
             static async Task SlowCompleteMessage(Task task) => await task;
 
             await next(context);

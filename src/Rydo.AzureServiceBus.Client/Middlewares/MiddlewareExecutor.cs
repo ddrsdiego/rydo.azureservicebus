@@ -5,8 +5,10 @@
     using System.Threading.Tasks;
     using Extensions;
     using Handlers;
+    using Logging.Observers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Observers;
 
     public sealed class MiddlewareExecutor : IMiddlewareExecutor
     {
@@ -17,7 +19,6 @@
         internal MiddlewareExecutor(ILogger<MiddlewareExecutor> logger,
             IMiddlewareConfigurationContainer middlewareConfigurationContainer)
         {
-       
             _logger = logger;
             _middlewareConfigurationContainer = middlewareConfigurationContainer;
             _consumerMiddlewares = new Dictionary<int, IMessageMiddleware>();
@@ -29,7 +30,7 @@
             Func<MessageConsumerContext, Task> nextOperation)
         {
             const int startIndexPosition = 0;
-            
+
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             return ExecuteDefinition(startIndexPosition, scope, context, nextOperation);
@@ -66,8 +67,7 @@
 
             try
             {
-                messageMiddleware = _consumerMiddlewares.SafeGetOrAdd(index,
-                    _ => (IMessageMiddleware)scope?.ServiceProvider.GetService(configuration?.Type));
+                messageMiddleware = _consumerMiddlewares.SafeGetOrAdd(index, _ => GetInstance(scope, configuration));
             }
             catch (Exception e)
             {
@@ -75,6 +75,18 @@
             }
 
             return messageMiddleware;
+        }
+
+        private static IMessageMiddleware GetInstance(IServiceScope scope, MiddlewareConfiguration configuration)
+        {
+            var middleware = (IMessageMiddleware) scope.ServiceProvider.GetService(configuration.Type);
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<LogConsumerObserver>>();
+            var loggerMiddleware = scope.ServiceProvider.GetRequiredService<ILogger<LogConsumerMiddlewareObserver>>();
+            
+            middleware.ConsumerObservable.Connect(new LogConsumerObserver(logger));
+            middleware.ConsumerMiddlewareObservable.Connect(new LogConsumerMiddlewareObserver(loggerMiddleware));
+            
+            return middleware;
         }
     }
 }

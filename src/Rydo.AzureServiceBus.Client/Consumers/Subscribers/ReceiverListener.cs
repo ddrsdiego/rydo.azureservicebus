@@ -27,9 +27,9 @@
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
-
+        
         private readonly ReceiveObservable _receiveObservable;
-
+        
         internal ReceiverListener(ILogger<ReceiverListener> logger, SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
@@ -37,10 +37,10 @@
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
             IsRunning = Task.FromResult(true);
 
-            
             _logger = logger;
             _receiveObservable = new ReceiveObservable();
             _cancellationToken = new CancellationToken();
+
             var channelOptions = new BoundedChannelOptions(channelCapacity)
             {
                 AllowSynchronousContinuations = true,
@@ -105,7 +105,7 @@
         private async Task CreateReceiversAsync()
         {
             await _receiveObservable.PreStartReceive(_subscriberContext);
-            
+
             _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.QueueSubscription,
                 new ServiceBusReceiverOptions
                 {
@@ -144,6 +144,9 @@
                     {
                         var messageContext = new MessageContext(receivedMessage);
                         messageConsumerContext.Add(messageContext);
+
+                        if (_receiveObservable.Count >= 0)
+                            await _receiveObservable.PreReceive(messageContext);
 
                         counter++;
                     }

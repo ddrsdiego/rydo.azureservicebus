@@ -3,7 +3,6 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Subscribers
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Logging.Observers;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Logging;

@@ -28,7 +28,17 @@
             if (scope.ServiceProvider.GetService(context.HandlerType ?? throw new InvalidOperationException()) is
                 IConsumerHandler messageHandler)
             {
+                context.StarWatch();
+
+                if (ConsumerMiddlewareObservable.Count > 0)
+                    await ConsumerMiddlewareObservable.PreConsumer(nameof(CustomConsumerMiddleware),"START-CUSTOM-HANDLER-CONSUMER", context);
+
                 await messageHandler.HandleAsync(context, context.CancellationToken);
+
+                context.StopWatch();
+                
+                if (ConsumerMiddlewareObservable.Count > 0)
+                    await ConsumerMiddlewareObservable.PostConsumer(nameof(CustomConsumerMiddleware),"FINISH-CUSTOM-HANDLER-CONSUMER", context);
             }
 
             await next(context);

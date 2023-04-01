@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Abstractions.Observers.Observables;
     using Client.Extensions;
     using Consumers.Subscribers;
     using Logging.Observers;
@@ -83,8 +82,10 @@
 
         private static void ConnectObservers(IServiceProvider sp, IReceiverListener receiverListener)
         {
-            var logLoggingReceiveObserver = sp.GetRequiredService<ILogger<LoggingReceiveObserver>>();
-            receiverListener.ConnectReceiveObserver(new LoggingReceiveObserver(logLoggingReceiveObserver));
+            var logLoggingReceiveObserver = sp.GetRequiredService<ILogger<LogReceiveObserver>>();
+            
+            receiverListener.ConnectReceiveObserver(new PrometheusIncomingReceiveObserver());
+            receiverListener.ConnectReceiveObserver(new LogReceiveObserver(logLoggingReceiveObserver));
         }
 
         private static ReceiverListener CreateReceiverListener(IServiceProvider sp, SubscriberContext consumerContext)

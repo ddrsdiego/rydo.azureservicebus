@@ -1,7 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Abstractions.Observers
 {
     using System.Threading.Tasks;
-    using Azure.Messaging.ServiceBus;
     using Consumers.Subscribers;
 
     /// <summary>
@@ -20,13 +19,13 @@
         
         Task PostStartReceive(SubscriberContext context);
         
-        // /// <summary>
-        // /// Called when a message has been delivered by the transport is about to be received by the endpoint
-        // /// </summary>
-        // /// <param name="context">The receive context of the message</param>
-        // /// <returns></returns>
-        // Task PreReceive(ReceiveContext context);
-        //
+        /// <summary>
+        /// Called when a message has been delivered by the transport is about to be received by the endpoint
+        /// </summary>
+        /// <param name="context">The receive context of the message</param>
+        /// <returns></returns>
+        Task PreReceive(MessageContext context);
+
         // /// <summary>
         // /// Called when the message has been received and acknowledged on the transport
         // /// </summary>

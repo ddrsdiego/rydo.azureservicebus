@@ -2,9 +2,14 @@
 {
     internal static class ServiceBusLogFields
     {
-        public const string LogType = "{log}";
-        public const string TopicName = "{topic-name}";
-        public const string SubscriptionName = "{subscription-name}";
+        public const string LogType = "{Log}";
+        public const string TopicName = "{TopicName}";
+        public const string SubscriptionName = "{SubscriptionName}";
+        public const string MessageContextLog = "{@MessageContextLog}";
         public const string SubscriberContextLog = "{@SubscriberContextLog}";
+        public const string MessageConsumerContextLength = "{MessageConsumercontextLength}";
+        public const string ElapsedMilliseconds = "{ElapsedMilliseconds}";
+        public const string MiddlewareType = "{MiddlewareTpe}";
+        public const string MsgConsumerContextAuditMedata = "{@MsgConsumerContextAuditMedata}";
     }
 }

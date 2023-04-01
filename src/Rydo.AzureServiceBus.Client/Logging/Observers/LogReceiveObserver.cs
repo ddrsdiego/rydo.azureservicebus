@@ -5,21 +5,22 @@
     using Consumers.Subscribers;
     using Microsoft.Extensions.Logging;
 
-    internal sealed class LoggingReceiveObserver : IReceiveObserver
+    internal sealed class LogReceiveObserver : IReceiveObserver
     {
         private const string StartReceiverLogType = "START-RECEIVER";
         private const string ConnectedReceiverLogType = "CONNECTED-RECEIVER";
+        private const string IncomingMessageReceiverLogType = "INCOMING-MESSAGE";
         
-        private readonly ILogger<LoggingReceiveObserver> _logger;
+        private readonly ILogger<LogReceiveObserver> _logger;
 
-        public LoggingReceiveObserver(ILogger<LoggingReceiveObserver> logger)
+        public LogReceiveObserver(ILogger<LogReceiveObserver> logger)
         {
             _logger = logger;
         }
         
         public Task PreStartReceive(SubscriberContext context)
         {
-            _logger.LogInformation($"{ServiceBusLogFields.LogType} - {ServiceBusLogFields.SubscriberContextLog}",
+            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
                 StartReceiverLogType,
                 new SubscriberContextLog(context));
             
@@ -28,14 +29,37 @@
 
         public Task PostStartReceive(SubscriberContext context)
         {
-            _logger.LogInformation($"{ServiceBusLogFields.LogType} - {ServiceBusLogFields.SubscriberContextLog}",
+            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
                 ConnectedReceiverLogType,
                 new SubscriberContextLog(context));
             
             return Task.CompletedTask;
         }
+
+        public Task PreReceive(MessageContext context)
+        {
+            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
+                IncomingMessageReceiverLogType,
+                new MessageContextLog(context));
+            
+            return Task.CompletedTask;
+        }
     }
 
+    internal sealed class MessageContextLog
+    {
+        private readonly MessageContext _context;
+
+        public MessageContextLog(MessageContext context)
+        {
+            _context = context;
+        }
+
+        public string MessageId => _context.ReceivedMessage.MessageId;
+        public string ContentType => _context.ReceivedMessage.ContentType;
+        public string PartitionKey => _context.ReceivedMessage.PartitionKey;
+    }
+    
     internal sealed class SubscriberContextLog
     {
         private readonly SubscriberContext _context;

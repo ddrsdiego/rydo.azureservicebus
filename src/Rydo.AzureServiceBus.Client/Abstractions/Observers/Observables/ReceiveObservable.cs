@@ -15,5 +15,10 @@
         {
             return ForEachAsync(x => x.PostStartReceive(context));
         }
+
+        public Task PreReceive(MessageContext context)
+        {
+            return ForEachAsync(x => x.PreReceive(context));
+        }
     }
 }

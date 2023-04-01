@@ -32,9 +32,9 @@
             {
                 var value = message.Value<AccountCreated>();
 
-                _logger.LogInformation("{MessageId} - {MessagePayload}",
-                    message.MessageId,
-                    message.ValueAsJsonString());
+                // _logger.LogInformation("{MessageId} - {MessagePayload}",
+                //     message.MessageId,
+                //     message.ValueAsJsonString());
 
                 await Task.Delay(250, cancellationToken);
             }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Azure.Messaging.ServiceBus;
@@ -11,6 +12,7 @@
     {
         private int _count;
         private readonly object _syncLock;
+        private readonly Stopwatch _stopwatch;
         private readonly LinkedList<MessageContext> _messageContexts;
 
         public MessageConsumerContext(SubscriberContext subscriberContext, ServiceBusReceiver receiver,
@@ -18,15 +20,20 @@
         {
             Count = 0;
             _syncLock = new object();
+            _stopwatch = new Stopwatch();
             CancellationToken = cancellationToken;
             SubscriberContext = subscriberContext;
             Receiver = receiver;
             _messageContexts = new LinkedList<MessageContext>();
         }
-
+        
         internal readonly ServiceBusReceiver Receiver;
         internal readonly SubscriberContext SubscriberContext;
         internal readonly CancellationToken CancellationToken;
+
+        internal void StarWatch() => _stopwatch.Restart();
+        internal void StopWatch() => _stopwatch.Stop();
+        internal long ElapsedTimeConsumer => _stopwatch.ElapsedMilliseconds;
 
         internal Type HandlerType => SubscriberContext.HandlerType;
         internal Type ContractType => SubscriberContext.ContractType;
