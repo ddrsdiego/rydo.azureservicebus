@@ -4,7 +4,7 @@
     using Azure.Messaging.ServiceBus;
     using Handlers;
 
-    internal sealed class MessageContext
+    public sealed class MessageContext
     {
         private MessageConsumerContext _messageConsumerContext;
 

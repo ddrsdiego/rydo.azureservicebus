@@ -33,11 +33,13 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
     const string accountCreatedTopic = "azure.servicebus.sample.account-created";
 
     var sender = serviceBusClient.CreateSender(accountCreatedTopic);
-    
+
     var tasks = new List<Task>(capacity);
-    for (var index = 0; index < capacity; index++)
+    for (var index = 1; index <= capacity; index++)
     {
-        var accountCreatedMessage = new AccountCreated("5090016");
+        var accountNumber = index.ToString("0000000");
+
+        var accountCreatedMessage = new AccountCreated(accountNumber);
         var payload = JsonSerializer.SerializeToUtf8Bytes(accountCreatedMessage);
         var message = new ServiceBusMessage(payload)
         {
@@ -46,10 +48,9 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
         };
 
         tasks.Add(sender.SendMessageAsync(message));
-        await Task.WhenAll(tasks);
-
     }
-    
+
+    await Task.WhenAll(tasks);
     return Results.Accepted();
 });
 

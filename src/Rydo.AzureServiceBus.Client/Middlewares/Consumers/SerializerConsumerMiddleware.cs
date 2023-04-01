@@ -21,11 +21,15 @@
         {
             if (!context.AnyMessage)
                 await next(context);
-            
+
             var messages = context.MessageContexts.ToArray();
             for (var index = 0; index < messages.Length; index++)
             {
                 var messageContext = messages[index];
+
+                if (ConsumerObservable.Count > 0)
+                    await ConsumerObservable.PreConsumer(messageContext);
+
                 var valueTask = messageContext.ToMessageRecord(context.SubscriberContext.ContractType,
                     context.CancellationToken);
 
@@ -34,6 +38,9 @@
                     : SlowAdapter(valueTask).Result;
 
                 messageContext.SetMessageRecord(messageRecord);
+
+                if (ConsumerObservable.Count > 0)
+                    await ConsumerObservable.PostConsumer(messageContext);
             }
 
             await next(context);

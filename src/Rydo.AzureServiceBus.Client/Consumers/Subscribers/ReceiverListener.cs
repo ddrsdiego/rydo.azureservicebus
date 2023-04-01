@@ -6,33 +6,41 @@
     using System.Threading;
     using System.Threading.Channels;
     using System.Threading.Tasks;
+    using Abstractions.Observers;
+    using Abstractions.Observers.Observables;
     using Azure.Messaging.ServiceBus;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Handlers;
     using Middlewares;
+    using Utils;
 
     internal sealed class ReceiverListener : IReceiverListener
     {
-        private ILogger<ReceiverListener> _logger;
         private IServiceProvider _serviceProvider;
         private ServiceBusClient _serviceBusClient;
         private ServiceBusReceiver _receiver;
         private IMiddlewareExecutor _middlewareExecutor;
 
         private readonly Task _readerTask;
+        private readonly ILogger<ReceiverListener> _logger;
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
-
-        internal ReceiverListener(SubscriberContext subscriberContext)
+        
+        private readonly ReceiveObservable _receiveObservable;
+        
+        internal ReceiverListener(ILogger<ReceiverListener> logger, SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
 
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
             IsRunning = Task.FromResult(true);
 
+            _logger = logger;
+            _receiveObservable = new ReceiveObservable();
             _cancellationToken = new CancellationToken();
+
             var channelOptions = new BoundedChannelOptions(channelCapacity)
             {
                 AllowSynchronousContinuations = true,
@@ -49,8 +57,6 @@
         public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _logger = _serviceProvider.GetRequiredService<ILogger<ReceiverListener>>();
-
             return this;
         }
 
@@ -68,9 +74,14 @@
 
         public Task<bool> IsRunning { get; set; }
 
+        public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
+        {
+            return _receiveObservable.Connect(observer);
+        }
+
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
-            CreateReceiver();
+            await CreateReceiversAsync();
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -91,8 +102,10 @@
             return IsRunning.Result;
         }
 
-        private void CreateReceiver()
+        private async Task CreateReceiversAsync()
         {
+            await _receiveObservable.PreStartReceive(_subscriberContext);
+
             _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.QueueSubscription,
                 new ServiceBusReceiverOptions
                 {
@@ -100,6 +113,8 @@
                     Identifier = _subscriberContext.SubscriberSpecification.SubscriptionName,
                     ReceiveMode = ServiceBusReceiveMode.PeekLock
                 });
+
+            await _receiveObservable.PostStartReceive(_subscriberContext);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,6 +144,10 @@
                     {
                         var messageContext = new MessageContext(receivedMessage);
                         messageConsumerContext.Add(messageContext);
+
+                        if (_receiveObservable.Count >= 0)
+                            await _receiveObservable.PreReceive(messageContext);
+
                         counter++;
                     }
 

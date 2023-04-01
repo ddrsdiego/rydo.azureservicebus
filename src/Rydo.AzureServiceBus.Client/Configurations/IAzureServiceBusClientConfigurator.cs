@@ -1,6 +1,5 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Configurations
 {
-    using System;
     using Producers;
     using Receivers;
     using Subscribers;
