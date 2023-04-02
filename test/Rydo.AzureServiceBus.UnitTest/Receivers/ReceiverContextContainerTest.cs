@@ -24,7 +24,7 @@
         public void Should_Add_Consumer_Handler_When_Is_Default_Subscribers_Values()
         {
             var services = new ServiceCollection();
-            var sut = new AzureServiceBusClientConfigurator(services);
+            var sut = new ServiceBusClientConfigurator(services);
 
             services.AddLogging();
 

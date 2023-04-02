@@ -1,6 +1,4 @@
 using System.Reflection;
-using Azure.Messaging.ServiceBus.Administration;
-using Microsoft.Extensions.Azure;
 using Rydo.AzureServiceBus.Client.Extensions;
 using Rydo.AzureServiceBus.Consumer;
 using Rydo.AzureServiceBus.Consumer.ConsumerHandlers;
@@ -17,11 +15,13 @@ var sbConnectionString = builder.Configuration.GetConnectionString("ServiceBus")
 
 builder.Services.AddAzureServiceBusClient(config =>
 {
+    config.Host.Configure(sbConnectionString);
     config.Producers.Configure(producers =>
     {
         producers.AddProducers(TopicNameConstants.AccountCreatedTopic);
         producers.AddProducers(TopicNameConstants.AccountUpdatedTopic);
     });
+
     config.Receiver.Configure<AccountCreatedConsumerHandler>(receiver =>
     {
         receiver.Subscriber.Add(sub =>
@@ -30,11 +30,15 @@ builder.Services.AddAzureServiceBusClient(config =>
             sub.MaxMessages(1_000);
         });
     });
-    config.Receiver.Configure<AccountUpdatedConsumerHandler>();
+    config.Receiver.Configure<AccountUpdatedConsumerHandler>(receiver =>
+    {
+        receiver.Subscriber.Add(sub =>
+        {
+            sub.BufferSize(1_000);
+            sub.MaxMessages(1_000);
+        });
+    });
 });
-
-builder.Services.AddAzureClients(config => { config.AddServiceBusClient(sbConnectionString); });
-builder.Services.AddSingleton(sp => new ServiceBusAdministrationClient(sbConnectionString));
 
 builder.Host.UseSerilog((context, sp, config) =>
 {

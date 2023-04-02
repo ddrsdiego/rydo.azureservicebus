@@ -9,6 +9,7 @@
     using Abstractions.Observers;
     using Abstractions.Observers.Observables;
     using Azure.Messaging.ServiceBus;
+    using Configurations.Host;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Handlers;
@@ -20,26 +21,29 @@
     internal sealed class ReceiverListener : IReceiverListener
     {
         private IServiceProvider _serviceProvider;
-        private ServiceBusClient _serviceBusClient;
         private ServiceBusReceiver _receiver;
         private IMiddlewareExecutor _middlewareExecutor;
 
         private readonly Task _readerTask;
         private readonly ILogger<ReceiverListener> _logger;
+        private readonly IServiceBusHostSettings _hostSettings;
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
         private readonly ReceiveObservable _receiveObservable;
         private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
-
-        internal ReceiverListener(ILogger<ReceiverListener> logger, SubscriberContext subscriberContext)
+        private readonly TaskCompletionSource<bool> _taskCompletion;
+        
+        internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusHostSettings hostSettings, SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
 
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
-            IsRunning = Task.FromResult(true);
+            _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            IsRunning = Task.FromResult(true);
             _logger = logger;
+            _hostSettings = hostSettings;
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
 
@@ -69,13 +73,7 @@
             _middlewareExecutor = middlewareExecutor;
             return this;
         }
-
-        public IReceiverListener ServiceBusClient(ServiceBusClient serviceBusClient)
-        {
-            _serviceBusClient = serviceBusClient ?? throw new ArgumentNullException(nameof(serviceBusClient));
-            return this;
-        }
-
+        
         public Task<bool> IsRunning { get; set; }
 
         public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
@@ -94,6 +92,9 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
+                if (stoppingToken.IsCancellationRequested)
+                    break;
+
                 var receivedMessages =
                     await _receiver.ReceiveMessagesAsync(_subscriberContext.Specification.MaxMessages,
                         cancellationToken: stoppingToken);
@@ -115,8 +116,14 @@
         {
             try
             {
+                _queue.Writer.Complete();
+
+                await _taskCompletion.Task;
+
                 await _receiver.DisposeAsync();
-                IsRunning = Task.FromResult(false);
+                await _hostSettings.ServiceBusClient.DisposeAsync();
+
+                IsRunning = _taskCompletion.Task;
 
                 return await IsRunning;
             }
@@ -131,7 +138,7 @@
         {
             await _receiveObservable.PreStartReceive(_subscriberContext);
 
-            _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.TopicSubscriptionName,
+            _receiver ??= _hostSettings.ServiceBusClient.CreateReceiver(_subscriberContext.TopicSubscriptionName,
                 new ServiceBusReceiverOptions
                 {
                     PrefetchCount = _subscriberContext.Specification.MaxMessages,
@@ -158,7 +165,7 @@
 
             try
             {
-                while (await _queue.Reader.WaitToReadAsync(_cancellationToken))
+                while (await _queue.Reader.WaitToReadAsync())
                 {
                     var counter = 0;
 
@@ -190,6 +197,10 @@
             {
                 Console.WriteLine(e);
                 throw;
+            }
+            finally
+            {
+                _taskCompletion.TrySetResult(false);
             }
         }
     }

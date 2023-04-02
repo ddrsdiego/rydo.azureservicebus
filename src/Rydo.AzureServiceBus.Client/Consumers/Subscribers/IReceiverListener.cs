@@ -4,7 +4,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions.Observers;
-    using Azure.Messaging.ServiceBus;
     using Middlewares;
     using Middlewares.Observers;
 
@@ -20,8 +19,6 @@
         IReceiverListener ServiceProvider(IServiceProvider serviceProvider);
 
         IReceiverListener MiddleExecutor(IMiddlewareExecutor middlewareExecutor);
-
-        IReceiverListener ServiceBusClient(ServiceBusClient serviceBusClient);
 
         Task<bool> IsRunning { get; set; }
 

@@ -29,7 +29,7 @@
         {
             await Task.Delay(MillisecondsDelayToStartConsumer, stoppingToken);
 
-            while (!stoppingToken.IsCancellationRequested)
+            while (!_source.Token.IsCancellationRequested)
             {
                 foreach (var (topicName, receiverListener) in _receiverListenerContainer.Listeners)
                 {
@@ -45,7 +45,7 @@
                         continue;
                     }
 
-                    receiverListener.IsRunning = Task.Run(async () => await receiverListener.StartAsync(stoppingToken),
+                    receiverListener.IsRunning = Task.Run(async () => await receiverListener.StartAsync(_source.Token),
                         stoppingToken);
                 }
 
@@ -55,6 +55,8 @@
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
+            _source.Cancel();
+
             foreach (var (topic, receiverListener) in _receiverListenerContainer.Listeners)
             {
                 await receiverListener.StopAsync(cancellationToken);

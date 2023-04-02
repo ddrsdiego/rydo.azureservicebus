@@ -16,7 +16,7 @@
         public async Task Should_Is_Running_Listener_When_Add_To_ListenerContainer_1()
         {
             var services = new ServiceCollection();
-            var sut = new AzureServiceBusClientConfigurator(services);
+            var sut = new ServiceBusClientConfigurator(services);
 
             services.AddLogging();
 
@@ -44,7 +44,7 @@
         public void Should_Is_Running_Listener_When_Add_To_ListenerContainer()
         {
             var services = new ServiceCollection();
-            var sut = new AzureServiceBusClientConfigurator(services);
+            var sut = new ServiceBusClientConfigurator(services);
 
             services.AddLogging();
 

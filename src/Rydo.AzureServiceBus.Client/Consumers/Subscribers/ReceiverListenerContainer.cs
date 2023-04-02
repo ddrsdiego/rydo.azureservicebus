@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Immutable;
-    using Azure.Messaging.ServiceBus;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Middlewares;
@@ -24,12 +23,9 @@
 
             foreach (var subscriber in Listeners.Values)
             {
-                var serviceBusClient = (ServiceBusClient) provider.GetRequiredService(typeof(ServiceBusClient));
-                
                 subscriber
                     .MiddleExecutor(BuildMiddlewareExecutor(provider))
-                    .ServiceProvider(provider)
-                    .ServiceBusClient(serviceBusClient);
+                    .ServiceProvider(provider);
             }
         }
 
@@ -43,7 +39,7 @@
 
             Listeners = Listeners.Add(topicName, receiverListener);
         }
-        
+
         private static IMiddlewareExecutor BuildMiddlewareExecutor(IServiceProvider provider) =>
             MiddlewareExecutor.Builder()
                 .WithLogger(provider.GetRequiredService<ILogger<MiddlewareExecutor>>())
