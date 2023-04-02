@@ -1,7 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Handlers
 {
     using Client.Consumers.Subscribers;
-    using NUnit.Framework;
 
     internal sealed class ConsumerSpecificationBuilderTest
     {

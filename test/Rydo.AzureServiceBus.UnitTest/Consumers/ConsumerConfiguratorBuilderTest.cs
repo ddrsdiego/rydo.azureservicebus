@@ -3,7 +3,6 @@
     using Client.Configurations;
     using Client.Consumers.Subscribers;
     using Consumer;
-    using Consumer.Workers;
     using FluentAssertions;
     using NUnit.Framework;
 

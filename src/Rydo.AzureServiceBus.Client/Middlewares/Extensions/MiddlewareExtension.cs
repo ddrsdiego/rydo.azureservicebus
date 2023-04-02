@@ -16,9 +16,9 @@
             configs.Insert(configs.Count,
                 new MiddlewareConfiguration(typeof(CustomConsumerMiddleware), ServiceLifetime.Scoped));
             
-            // configs.Insert(configs.Count,
-            //     new MiddlewareConfiguration(typeof(DeadLetterHandleMiddleware), ServiceLifetime.Scoped));
-
+            configs.Insert(configs.Count,
+                new MiddlewareConfiguration(typeof(DeadLetterHandleMiddleware), ServiceLifetime.Scoped));
+            
             var container = new MiddlewareConfigurationContainer(configs,
                 new MiddlewareConfiguration(typeof(CompleteMessageMiddleware), ServiceLifetime.Scoped));
 

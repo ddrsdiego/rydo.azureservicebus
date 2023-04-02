@@ -13,6 +13,8 @@
     using Microsoft.Extensions.Logging;
     using Handlers;
     using Middlewares;
+    using Middlewares.Observers;
+    using Middlewares.Observers.Observable;
     using Utils;
 
     internal sealed class ReceiverListener : IReceiverListener
@@ -27,9 +29,9 @@
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
-        
         private readonly ReceiveObservable _receiveObservable;
-        
+        private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
+
         internal ReceiverListener(ILogger<ReceiverListener> logger, SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
@@ -39,6 +41,8 @@
 
             _logger = logger;
             _receiveObservable = new ReceiveObservable();
+            _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
+
             _cancellationToken = new CancellationToken();
 
             var channelOptions = new BoundedChannelOptions(channelCapacity)
@@ -79,6 +83,11 @@
             return _receiveObservable.Connect(observer);
         }
 
+        public IConnectHandle ConnectFinishConsumerMiddlewareObserver(IFinishConsumerMiddlewareObserver observer)
+        {
+            return _finishConsumerMiddlewareObservable.Connect(observer);
+        }
+
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
             await CreateReceiversAsync();
@@ -102,9 +111,26 @@
             return IsRunning.Result;
         }
 
+        public async Task<bool> StopAsync(CancellationToken stoppingToken)
+        {
+            try
+            {
+                await _receiver.DisposeAsync();
+                IsRunning = Task.FromResult(false);
+
+                return await IsRunning;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
         private async Task CreateReceiversAsync()
         {
             await _receiveObservable.PreStartReceive(_subscriberContext);
+
             _receiver ??= _serviceBusClient.CreateReceiver(_subscriberContext.TopicSubscriptionName,
                 new ServiceBusReceiverOptions
                 {
@@ -152,6 +178,9 @@
 
                     await _middlewareExecutor.Execute(_serviceProvider.CreateScope(), messageConsumerContext,
                         _ => Task.CompletedTask);
+
+                    if (_finishConsumerMiddlewareObservable.Count > 0)
+                        await _finishConsumerMiddlewareObservable.EndConsumerAsync(messageConsumerContext);
                 }
             }
             catch (OperationCanceledException e) when (e.CancellationToken == _cancellationToken)

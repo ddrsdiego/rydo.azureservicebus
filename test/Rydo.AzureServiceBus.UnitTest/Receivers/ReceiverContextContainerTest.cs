@@ -1,6 +1,5 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Receivers
 {
-    using System;
     using Client.Configurations;
     using Client.Configurations.Receivers;
     using Client.Consumers.Subscribers;

@@ -79,13 +79,11 @@
 
         private static IMessageMiddleware GetInstance(IServiceScope scope, MiddlewareConfiguration configuration)
         {
+            var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
             var middleware = (IMessageMiddleware) scope.ServiceProvider.GetService(configuration.Type);
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<LogConsumerObserver>>();
-            var loggerMiddleware = scope.ServiceProvider.GetRequiredService<ILogger<LogConsumerMiddlewareObserver>>();
-            
+
             middleware.ConsumerObservable.Connect(new LogConsumerObserver(logger));
-            middleware.ConsumerMiddlewareObservable.Connect(new LogConsumerMiddlewareObserver(loggerMiddleware));
-            
+            middleware.ConnectConsumerMiddlewareObserver(new LogConsumerMiddlewareObserver(logger));
             return middleware;
         }
     }

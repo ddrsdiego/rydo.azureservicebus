@@ -9,7 +9,7 @@
     internal sealed class AzureServiceBusIntegrationHostedService : BackgroundService
     {
         private const int MillisecondsDelayToStartConsumer = 5_000;
-        
+
         private readonly CancellationTokenSource _source;
         private readonly IReceiverListenerContainer _receiverListenerContainer;
         private readonly ILogger<AzureServiceBusIntegrationHostedService> _logger;
@@ -31,31 +31,36 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                foreach (var (topicName, subscriber) in _receiverListenerContainer.Listeners)
+                foreach (var (topicName, receiverListener) in _receiverListenerContainer.Listeners)
                 {
-                    if (!subscriber.IsRunning.IsCompleted)
+                    if (!receiverListener.IsRunning.IsCompleted)
                         continue;
-                    
+
                     if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                         continue;
 
-                    if (!await subscriber.IsRunning)
+                    if (!await receiverListener.IsRunning)
                     {
                         // DEFINE STRATEGY TO STOP THE LISTENER
                         continue;
                     }
-                    
-                    subscriber.IsRunning = Task.Run(async () => await subscriber.StartAsync(stoppingToken),
+
+                    receiverListener.IsRunning = Task.Run(async () => await receiverListener.StartAsync(stoppingToken),
                         stoppingToken);
                 }
-                
+
                 await Task.Delay(1_000, _source.Token);
             }
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            return base.StopAsync(cancellationToken);
+            foreach (var (topic, receiverListener) in _receiverListenerContainer.Listeners)
+            {
+                await receiverListener.StopAsync(cancellationToken);
+            }
+
+            await base.StopAsync(cancellationToken);
         }
     }
 }

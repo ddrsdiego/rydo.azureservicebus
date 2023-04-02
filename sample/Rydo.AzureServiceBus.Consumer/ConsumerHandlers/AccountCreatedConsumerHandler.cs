@@ -25,13 +25,23 @@
             _logger = logger;
         }
 
-        public override async Task HandleAsync(MessageConsumerContext context,
+        public override async Task HandleAsync(IMessageConsumerContext context,
             CancellationToken cancellationToken)
         {
-            foreach (var message in context.Messages)
+            var tasks = new Task[context.Length];
+            var messageRecords = context.Messages.ToArray();
+
+            for (var index = 0; index < messageRecords.Length; index++)
             {
-                var value = message.Value<AccountCreated>();
-                await Task.Delay(100, cancellationToken);
+                var value = messageRecords[index].Value<AccountCreated>();
+                tasks[index] = Task.Delay(100, cancellationToken);
+            }
+
+            for (var index = 0; index < tasks.Length; index++)
+            {
+                if (tasks[index].IsCompletedSuccessfully)
+                    continue;
+                await tasks[index];
             }
         }
     }

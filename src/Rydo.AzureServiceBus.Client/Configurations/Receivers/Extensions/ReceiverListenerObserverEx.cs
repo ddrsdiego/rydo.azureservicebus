@@ -4,17 +4,19 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Rydo.AzureServiceBus.Client.Consumers.Subscribers;
-    using Rydo.AzureServiceBus.Client.Logging.Observers;
-    using Rydo.AzureServiceBus.Client.Metrics.Observers;
+    using Logging.Observers;
+    using Metrics.Observers;
+    using Middlewares.Observers;
 
     internal static class ReceiverListenerObserverEx
     {
         public static void ConnectObservers(this IReceiverListener receiverListener, IServiceProvider sp)
         {
-            var logLoggingReceiveObserver = sp.GetRequiredService<ILogger<LogReceiveObserver>>();
-
+            var logger = sp.GetRequiredService<ILoggerFactory>();
+            
             receiverListener.ConnectReceiveObserver(new PrometheusIncomingReceiveObserver());
-            receiverListener.ConnectReceiveObserver(new LogReceiveObserver(logLoggingReceiveObserver));
+            receiverListener.ConnectReceiveObserver(new LogReceiveObserver(logger));
+            receiverListener.ConnectFinishConsumerMiddlewareObserver(new LogFinishConsumerMiddlewareObserver(logger));
         }
     }
 }

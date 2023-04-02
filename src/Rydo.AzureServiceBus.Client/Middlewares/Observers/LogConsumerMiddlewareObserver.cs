@@ -6,20 +6,18 @@
     using Logging;
     using Microsoft.Extensions.Logging;
 
-    internal class LogConsumerMiddlewareObserver : IConsumerMiddlewareObserver
+    internal sealed class LogConsumerMiddlewareObserver : IConsumerMiddlewareObserver
     {
         private readonly ILogger<LogConsumerMiddlewareObserver> _logger;
 
-        public LogConsumerMiddlewareObserver(ILogger<LogConsumerMiddlewareObserver> logger)
-        {
-            _logger = logger;
-        }
+        public LogConsumerMiddlewareObserver(ILoggerFactory logger) =>
+            _logger = logger.CreateLogger<LogConsumerMiddlewareObserver>();
 
-        public Task PreConsumer(string middlewareType, string step, MessageConsumerContext context)
+        public Task PreConsumerAsync(string middlewareType, string step, MessageConsumerContext context)
         {
             var stepFormat = $"{step}-INIT";
-            
-            context.StarWatch();
+
+            context.StarMiddlewareWatch();
 
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogInformation(
@@ -30,12 +28,12 @@
             return Task.CompletedTask;
         }
 
-        public Task PostConsumer(string middlewareType, string step, MessageConsumerContext context)
+        public Task PostConsumerAsync(string middlewareType, string step, MessageConsumerContext context)
         {
             var stepFormat = $"{step}-END";
-            
-            context.StopWatch();
-            
+
+            context.StopMiddlewareWatch();
+
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogInformation(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
@@ -44,6 +42,9 @@
 
             return Task.CompletedTask;
         }
+
+        public Task EndConsumerAsync(string middlewareType, string step, MessageConsumerContext context) =>
+            Task.CompletedTask;
     }
 
     internal static class ConsumeMetadataFactory
@@ -57,7 +58,7 @@
                 ContextId = context.ContextId,
                 ContextLength = context.Length,
                 MiddlewareType = middlewareType,
-                ElapsedTime = context.ElapsedTimeConsumer,
+                ElapsedTime = context.ElapsedTimeMiddleware,
             };
         }
     }
