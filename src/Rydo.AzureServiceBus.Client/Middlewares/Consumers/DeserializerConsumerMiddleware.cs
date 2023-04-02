@@ -4,28 +4,22 @@
     using System.Threading.Tasks;
     using Client.Consumers.Subscribers;
     using Handlers;
-    using Microsoft.Extensions.Logging;
 
     internal sealed class DeserializerConsumerMiddleware : MessageMiddleware
     {
         private readonly IMessageRecordFactory _messageRecordFactory;
         private const string DeserializerConsumerMessagesStep = "DESERIALIZER-CONSUMER-MESSAGES";
-        
-        public DeserializerConsumerMiddleware(ILoggerFactory logger, IMessageRecordFactory messageRecordFactory)
-            : base(logger.CreateLogger<DeserializerConsumerMiddleware>())
+
+        public DeserializerConsumerMiddleware(IMessageRecordFactory messageRecordFactory)
+            : base(nameof(DeserializerConsumerMiddleware))
         {
             _messageRecordFactory = messageRecordFactory;
         }
 
-        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
-        {
-            if (!context.AnyMessage)
-                await next(context);
+        protected override string ConsumerMessagesStep => DeserializerConsumerMessagesStep;
 
-            if (ConsumerMiddlewareObservable.Count > 0)
-                await ConsumerMiddlewareObservable.PreConsumer(nameof(DeserializerConsumerMiddleware),
-                    DeserializerConsumerMessagesStep, context);
-            
+        protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
+        {
             var messages = context.MessagesContext.ToArray();
             for (var index = 0; index < messages.Length; index++)
             {
@@ -46,12 +40,6 @@
                 if (ConsumerObservable.Count > 0)
                     await ConsumerObservable.PostConsumer(messageContext);
             }
-
-            if (ConsumerMiddlewareObservable.Count > 0)
-                await ConsumerMiddlewareObservable.PostConsumer(nameof(DeserializerConsumerMiddleware),
-                    DeserializerConsumerMessagesStep, context);
-            
-            await next(context);
 
             static async ValueTask<MessageRecord> SlowAdapter(ValueTask<MessageRecord> task)
             {

@@ -3,23 +3,20 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Handlers;
-    using Microsoft.Extensions.Logging;
 
     internal sealed class CompleteMessageMiddleware : MessageMiddleware
     {
         private const string CompleteMessageStep = "COMPLETE-CONSUMER-MESSAGE";
 
-        public CompleteMessageMiddleware(ILoggerFactory logger)
-            : base(logger.CreateLogger<CompleteMessageMiddleware>())
+        public CompleteMessageMiddleware()
+            : base(nameof(CompleteMessageMiddleware))
         {
         }
 
-        public override async Task InvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
-        {
-            if (ConsumerMiddlewareObservable.Count > 0)
-                await ConsumerMiddlewareObservable.PreConsumer(nameof(CompleteMessageMiddleware), CompleteMessageStep,
-                    context);
+        protected override string ConsumerMessagesStep => CompleteMessageStep;
 
+        protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
+        {
             var completeMessageTasks = new List<Task>(context.Length);
             foreach (var messageContext in context.MessagesContext)
             {
@@ -37,13 +34,7 @@
                 await SlowCompleteMessage(task);
             }
 
-            if (ConsumerMiddlewareObservable.Count > 0)
-                await ConsumerMiddlewareObservable.PostConsumer(nameof(CompleteMessageMiddleware), CompleteMessageStep,
-                    context);
-
             static async Task SlowCompleteMessage(Task task) => await task;
-
-            await next(context);
         }
     }
 }

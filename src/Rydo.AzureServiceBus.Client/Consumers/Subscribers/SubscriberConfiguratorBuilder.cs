@@ -1,5 +1,6 @@
 namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
+    using System;
     using CSharpFunctionalExtensions;
     using Configurations;
 
@@ -14,12 +15,12 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
         private bool _neverAutoDelete;
         private int _autoDeleteAfterIdleInHours;
 
-        internal SubscriberConfiguratorBuilder(string topicName)
+        internal SubscriberConfiguratorBuilder(string topicName, string subscriptionName)
         {
+            _topicName = topicName ?? throw new ArgumentNullException(nameof(topicName));
+            _subscriptionName = subscriptionName ?? throw new ArgumentNullException(nameof(subscriptionName));
+
             HasBuild = false;
-            
-            _topicName = topicName;
-            _subscriptionName = string.Empty;
             _autoDeleteAfterIdleInHours = TopicConsumerDefaultValues.AutoDeleteAfterIdleInHours;
             _neverAutoDelete = TopicConsumerDefaultValues.NeverAutoDelete;
             _maxDeliveryCount = TopicConsumerDefaultValues.MaxDeliveryCount;
@@ -30,23 +31,12 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 
         public bool HasBuild { get; private set; }
 
-        /// <summary>
-        /// Subscription names can contain letters, numbers, periods (.), hyphens (-), and underscores (_), up to 50 characters. Subscription names are also case-insensitive.
-        /// </summary>
-        /// <param name="subscriptionName"></param>
-        /// <returns></returns>
-        public SubscriberConfiguratorBuilder SubscriptionName(string subscriptionName)
-        {
-            _subscriptionName = subscriptionName;
-            return this;
-        }
-
         public SubscriberConfiguratorBuilder AutoDeleteAfterIdleInHours(int autoDeleteAfterIdleInHours)
         {
             _autoDeleteAfterIdleInHours = autoDeleteAfterIdleInHours;
             return this;
         }
-        
+
         public SubscriberConfiguratorBuilder NeverAutoDelete(bool neverAutoDelete)
         {
             _neverAutoDelete = neverAutoDelete;
@@ -80,8 +70,16 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
             return this;
         }
 
+        /// <summary>
+        /// The maximum number of messages that will be received.
+        /// </summary>
+        /// <param name="maxMessages">The maximum number of messages that will be received. Default is 1</param>
+        /// <returns></returns>
         public SubscriberConfiguratorBuilder MaxMessages(int maxMessages)
         {
+            if (maxMessages <= 0)
+                maxMessages = TopicConsumerDefaultValues.MaxMessages;
+
             _maxMessages = maxMessages;
             return this;
         }

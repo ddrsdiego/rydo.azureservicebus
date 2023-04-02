@@ -4,16 +4,17 @@
     using Handlers;
     using Utils;
 
-    public class ConsumerMiddlewareObservable : Connectable<IConsumerMiddlewareObserver>, IConsumerMiddlewareObserver
+    public sealed class ConsumerMiddlewareObservable : Connectable<IConsumerMiddlewareObserver>,
+        IConsumerMiddlewareObserver
     {
-        public Task PreConsumer(string middlewareType, string step, MessageConsumerContext context)
-        {
-            return ForEachAsync(x => x.PreConsumer(middlewareType, step, context));
-        }
+        public Task PreConsumerAsync(string middlewareType, string step, MessageConsumerContext context) =>
+            Count <= 0
+                ? Task.CompletedTask
+                : ForEachAsync(x => x.PreConsumerAsync(middlewareType, step, context));
 
-        public Task PostConsumer(string middlewareType, string step, MessageConsumerContext context)
-        {
-            return ForEachAsync(x => x.PostConsumer(middlewareType, step, context));
-        }
+        public Task PostConsumerAsync(string middlewareType, string step, MessageConsumerContext context) =>
+            Count <= 0
+                ? Task.CompletedTask
+                : ForEachAsync(x => x.PostConsumerAsync(middlewareType, step, context));
     }
 }

@@ -1,21 +1,24 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
+    using System;
+
     public sealed class SubscriberSpecification
     {
-        internal SubscriberSpecification(string topicName, string subscriptionName, int maxDelivery,
-            int lockDurationInMinutes, int maxDeliveryCount)
+        internal SubscriberSpecification(IConsumerConfigurator consumer)
         {
-            TopicName = topicName;
-            SubscriptionName = subscriptionName;
-            MaxDelivery = maxDelivery;
-            LockDurationInMinutes = lockDurationInMinutes;
-            MaxDeliveryCount = maxDeliveryCount;
+            Consumer = consumer;
+            TopicName = Consumer.TopicName;
+            SubscriptionName = Consumer.SubscriptionName;
+            MaxMessages = Consumer.MaxMessages;
+            MaxDeliveryCount = Consumer.MaxDeliveryCount;
+            LockDurationInMinutes = TimeSpan.FromMinutes(Consumer.LockDurationInMinutes);
         }
-        
+
         public readonly string TopicName;
         public readonly string SubscriptionName;
-        public readonly int MaxDelivery;
-        public readonly int LockDurationInMinutes;
+        public readonly int MaxMessages;
+        public readonly TimeSpan LockDurationInMinutes;
         public readonly int MaxDeliveryCount;
+        public readonly IConsumerConfigurator Consumer;
     }
 }

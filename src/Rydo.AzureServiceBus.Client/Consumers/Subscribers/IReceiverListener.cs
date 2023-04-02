@@ -6,9 +6,11 @@
     using Abstractions.Observers;
     using Azure.Messaging.ServiceBus;
     using Middlewares;
+    using Middlewares.Observers;
 
     public interface IReceiver :
-        IReceiveObserverConnector
+        IReceiveObserverConnector,
+        IFinishConsumerMiddlewareObserverConnector
     {
     }
 
@@ -24,5 +26,7 @@
         Task<bool> IsRunning { get; set; }
 
         Task<bool> StartAsync(CancellationToken stoppingToken);
+        
+        Task<bool> StopAsync(CancellationToken stoppingToken);
     }
 }

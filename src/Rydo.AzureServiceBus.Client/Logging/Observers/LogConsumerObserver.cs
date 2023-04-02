@@ -10,25 +10,13 @@
     {
         private readonly ILogger<LogConsumerObserver> _logger;
 
-        public LogConsumerObserver(ILogger<LogConsumerObserver> logger)
-        {
-            _logger = logger;
-        }
+        public LogConsumerObserver(ILoggerFactory logger) => _logger = logger.CreateLogger<LogConsumerObserver>();
 
-        public Task PreConsumer(MessageContext context)
-        {
-            return Task.CompletedTask;
-        }
+        public Task PreConsumer(MessageContext context) => Task.CompletedTask;
 
-        public Task PreConsumer(MessageConsumerContext context)
-        {
-            return Task.CompletedTask;
-        }
+        public Task PreConsumer(MessageConsumerContext context) => Task.CompletedTask;
 
-        public Task PostConsumer(MessageContext context)
-        {
-            return Task.CompletedTask;
-        }
+        public Task PostConsumer(MessageContext context) => Task.CompletedTask;
 
         public Task PostConsumer(MessageConsumerContext context)
         {
@@ -36,7 +24,7 @@
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageConsumerContextLength} messages completed in {ServiceBusLogFields.ElapsedMilliseconds} ms.",
                 "COMPLETED_MESSAGE",
                 context.Length,
-                context.ElapsedTimeConsumer);
+                context.ElapsedTimeMiddleware);
 
             return Task.CompletedTask;
         }

@@ -9,12 +9,43 @@
     using Consumers.Subscribers;
     using Utils;
 
-    public sealed class MessageConsumerContext
+    public interface IMessageConsumerContext
+    {
+        string ContextId { get; }
+
+        /// <summary>
+        /// True if there is at least one message to be processed, false otherwise.
+        /// </summary>
+        bool AnyMessage { get; }
+
+        /// <summary>
+        /// Number of messages within the context to be processed.
+        /// </summary>
+        int Length { get; }
+
+        /// <summary>
+        /// Queue or topic binding name.
+        /// </summary>
+        string QueueSubscription { get; }
+
+        /// <summary>
+        /// List of messages to be processed. The Length and AnyMessage properties indicate if there are messages in the list.
+        /// </summary>
+        IEnumerable<MessageRecord> Messages
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
+        }
+    }
+
+    public sealed class MessageConsumerContext : IMessageConsumerContext
     {
         private int _length;
         private int _faultsLength;
         private readonly object _syncLock;
-        private readonly Stopwatch _stopwatch;
+        
+        private readonly Stopwatch _stopwatchMiddleware;
+        private readonly Stopwatch _stopwatchMsgContext;
         private LinkedList<MessageRecord> _messagesRecordToRetry;
         private readonly LinkedList<MessageContext> _messageContexts;
 
@@ -22,7 +53,10 @@
             CancellationToken cancellationToken)
         {
             _syncLock = new object();
-            _stopwatch = new Stopwatch();
+
+            _stopwatchMsgContext = Stopwatch.StartNew();
+            
+            _stopwatchMiddleware = new Stopwatch();
             _messageContexts = new LinkedList<MessageContext>();
 
             Length = 0;
@@ -37,9 +71,13 @@
         internal readonly SubscriberContext SubscriberContext;
         internal readonly CancellationToken CancellationToken;
 
-        internal void StarWatch() => _stopwatch.Restart();
-        internal void StopWatch() => _stopwatch.Stop();
-        internal long ElapsedTimeConsumer => _stopwatch.ElapsedMilliseconds;
+        internal void StopMsgContextWatch() => _stopwatchMsgContext.Stop();
+        internal void StopMiddlewareWatch() => _stopwatchMiddleware.Stop();
+        internal void StarMiddlewareWatch() => _stopwatchMiddleware.Restart();
+        
+        internal long ElapsedTimeMiddleware => _stopwatchMiddleware.ElapsedMilliseconds;
+        internal long ElapsedTimeMessageContext => _stopwatchMsgContext.ElapsedMilliseconds;
+        
         internal Type HandlerType => SubscriberContext.HandlerType;
         internal Type ContractType => SubscriberContext.ContractType;
         internal bool AnyFault => FaultsLength > 0;
@@ -108,7 +146,7 @@
         /// <summary>
         /// Queue or topic binding name.
         /// </summary>
-        public string QueueSubscription => SubscriberContext.QueueSubscription;
+        public string QueueSubscription => SubscriberContext.TopicSubscriptionName;
 
         /// <summary>
         /// List of messages to be processed. The Length and AnyMessage properties indicate if there are messages in the list.

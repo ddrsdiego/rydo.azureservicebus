@@ -13,11 +13,8 @@
         
         private readonly ILogger<LogReceiveObserver> _logger;
 
-        public LogReceiveObserver(ILogger<LogReceiveObserver> logger)
-        {
-            _logger = logger;
-        }
-        
+        public LogReceiveObserver(ILoggerFactory logger) => _logger = logger.CreateLogger<LogReceiveObserver>();
+
         public Task PreStartReceive(SubscriberContext context)
         {
             _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
@@ -66,10 +63,10 @@
 
         public SubscriberContextLog(SubscriberContext context) => _context = context;
 
-        public string TopicName => _context.SubscriberSpecification.TopicName;
-        public string SubscriptionName => _context.SubscriberSpecification.SubscriptionName;
+        public string TopicName => _context.Specification.TopicName;
+        public string SubscriptionName => _context.Specification.SubscriptionName;
         public string Handler => _context.HandlerType.Name;
         public string Contract => _context.ContractType.Name;
-        public string QueueSubscription => _context.QueueSubscription;
+        public string QueueSubscription => _context.TopicSubscriptionName;
     }
 }

@@ -1,39 +1,20 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Configurations.Receivers
 {
     using System;
-    using System.Collections.Generic;
 
     public interface IAzureServiceBusReceiverConfigurator
     {
         /// <summary>
-        /// 
+        /// Configures a listener to the context having as a parameter the topic name assigned to the consumer handler.
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="container"></param>
-        void Configure(Type type, Action<IReceiverContextContainer> container);
+        /// <typeparam name="T"></typeparam>
+        void Configure<T>();
         
         /// <summary>
-        /// 
+        /// Configures a listener to the context having as a parameter the topic name assigned to the consumer handler.
         /// </summary>
-        /// <param name="types"></param>
         /// <param name="container"></param>
-        void Configure(IEnumerable<Type> types, Action<IReceiverContextContainer> container);
-
-        /// <summary>
-        /// /
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="queueName"></param>
-        /// <param name="container"></param>
-        void Configure(Type type, string queueName, Action<IReceiverContextContainer> container);
-        
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="types"></param>
-        /// <param name="queueName"></param>
-        /// <param name="container"></param>
-        void Configure(IEnumerable<Type> types, string queueName, Action<IReceiverContextContainer> container);
+        /// <typeparam name="T"></typeparam>
+        void Configure<T>(Action<IReceiverContextContainer> container);
     }
 }

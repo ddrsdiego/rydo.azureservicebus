@@ -4,17 +4,17 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 
     public sealed class SubscriberContext
     {
-        public SubscriberContext(SubscriberSpecification subscriberSpecification, Type contractType, Type handlerType)
+        public SubscriberContext(SubscriberSpecification specification, Type contractType, Type handlerType)
         {
             ContractType = contractType;
             HandlerType = handlerType;
-            SubscriberSpecification = subscriberSpecification;
+            Specification = specification;
         }
 
         public readonly Type HandlerType;
         public readonly Type ContractType;
-        public readonly SubscriberSpecification SubscriberSpecification;
+        public readonly SubscriberSpecification Specification;
 
-        public string QueueSubscription => $"{SubscriberSpecification.SubscriptionName}-{SubscriberSpecification.TopicName}";
+        public string TopicSubscriptionName => $"{Specification.SubscriptionName}-{Specification.TopicName}";
     }
 }

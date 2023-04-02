@@ -8,16 +8,17 @@
     {
         void WithTypes(IEnumerable<Type> types);
 
+        void WithConsumerHandler<T>();
+
+        void Add();
+        
+        void Add(string subscriptionName);
+        
+        void Add(Action<SubscriberConfiguratorBuilder> configurator);
+
+        void Add(string subscriptionName, Action<SubscriberConfiguratorBuilder> configurator);
+
         ImmutableDictionary<string, SubscriberContext> Contexts { get; }
-
-        void AddSubscriber(string topicName);
-
-        void AddSubscriber(string topicName, Action<SubscriberConfiguratorBuilder> configurator);
-
-        void AddSubscriber(string topicName, string subscriptionName);
-
-        void AddSubscriber(string topicName, string subscriptionName,
-            Action<SubscriberConfiguratorBuilder> configurator);
 
         bool TryGetConsumerContext(string topicName, out SubscriberContext context);
     }

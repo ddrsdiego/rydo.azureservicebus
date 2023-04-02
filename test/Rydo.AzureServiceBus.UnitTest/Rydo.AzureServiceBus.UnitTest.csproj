@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
 
         <IsPackable>false</IsPackable>
     </PropertyGroup>
@@ -19,6 +19,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\sample\Rydo.AzureServiceBus.Consumer\Rydo.AzureServiceBus.Consumer.csproj" />
+      <ProjectReference Include="..\..\sample\Rydo.AzureServiceBus.Producer\Rydo.AzureServiceBus.Producer.csproj" />
       <ProjectReference Include="..\..\src\Rydo.AzureServiceBus.Client\Rydo.AzureServiceBus.Client.csproj" />
     </ItemGroup>
 

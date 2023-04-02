@@ -10,11 +10,7 @@
 
     internal sealed class ReceiverContextContainer : IReceiverContextContainer
     {
-        public ReceiverContextContainer(IServiceCollection services)
-        {
-            Subscriber = new SubscriberContextContainer(services);
-        }
-        
+        public ReceiverContextContainer(IServiceCollection services) => Subscriber = new SubscriberContextContainer(services);
         public ISubscriberContextContainer Subscriber { get; }
     }
 }
