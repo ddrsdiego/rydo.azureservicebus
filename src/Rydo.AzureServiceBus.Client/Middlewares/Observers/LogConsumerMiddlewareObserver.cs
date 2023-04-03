@@ -30,10 +30,10 @@
 
         public Task PostConsumerAsync(string middlewareType, string step, MessageConsumerContext context)
         {
-            var stepFormat = $"{step}-END";
-
             context.StopMiddlewareWatch();
 
+            var stepFormat = $"{step}-END";
+            
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogInformation(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",

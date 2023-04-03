@@ -73,6 +73,9 @@
         public bool TryGetConsumerContext(string topicName, out SubscriberContext context)
         {
             context = default;
+            if (!Contexts.TryGetValue(topicName, out context))
+                return false;
+            
             return true;
         }
 

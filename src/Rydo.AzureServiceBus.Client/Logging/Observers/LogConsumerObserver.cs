@@ -12,11 +12,11 @@
 
         public LogConsumerObserver(ILoggerFactory logger) => _logger = logger.CreateLogger<LogConsumerObserver>();
 
-        public Task PreConsumer(MessageContext context) => Task.CompletedTask;
+        public Task PreConsumerAsync(MessageContext context) => Task.CompletedTask;
 
         public Task PreConsumer(MessageConsumerContext context) => Task.CompletedTask;
 
-        public Task PostConsumer(MessageContext context) => Task.CompletedTask;
+        public Task PostConsumerAsync(MessageContext context) => Task.CompletedTask;
 
         public Task PostConsumer(MessageConsumerContext context)
         {

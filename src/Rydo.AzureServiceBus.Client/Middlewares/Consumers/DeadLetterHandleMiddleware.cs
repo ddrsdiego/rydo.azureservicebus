@@ -14,9 +14,9 @@
 
         protected override string ConsumerMessagesStep => DeadLetterConsumerStep;
 
-        protected override Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
+        protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            return Task.CompletedTask;
+            await Task.CompletedTask;
         }
     }
 }

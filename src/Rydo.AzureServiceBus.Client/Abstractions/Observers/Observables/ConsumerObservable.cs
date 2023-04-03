@@ -2,29 +2,18 @@
 {
     using System.Threading.Tasks;
     using Consumers.Subscribers;
-    using Handlers;
     using Utils;
 
-    public sealed class ConsumerObservable : Connectable<IConsumerObserver>, IConsumerObserver
+    internal sealed class ConsumerObservable : Connectable<IConsumerObserver>, IConsumerObserver
     {
-        public Task PreConsumer(MessageContext context)
-        {
-            return ForEachAsync(x => x.PreConsumer(context));
-        }
+        public Task PreConsumerAsync(MessageContext context) =>
+            Count > 0
+                ? ForEachAsync(x => x.PreConsumerAsync(context))
+                : Task.CompletedTask;
 
-        public Task PreConsumer(MessageConsumerContext context)
-        {
-            return ForEachAsync(x => x.PreConsumer(context));
-        }
-
-        public Task PostConsumer(MessageContext context)
-        {
-            return ForEachAsync(x => x.PostConsumer(context));
-        }
-
-        public Task PostConsumer(MessageConsumerContext context)
-        {
-            return ForEachAsync(x => x.PostConsumer(context));
-        }
+        public Task PostConsumerAsync(MessageContext context) =>
+            Count > 0
+                ? ForEachAsync(x => x.PostConsumerAsync(context))
+                : Task.CompletedTask;
     }
 }

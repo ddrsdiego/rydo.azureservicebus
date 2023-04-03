@@ -26,15 +26,15 @@
 
         private readonly Task _readerTask;
         private readonly ILogger<ReceiverListener> _logger;
-        private readonly IServiceBusHostSettings _hostSettings;
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly Channel<ServiceBusReceivedMessage> _queue;
         private readonly ReceiveObservable _receiveObservable;
         private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
         private readonly TaskCompletionSource<bool> _taskCompletion;
-        
-        internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusHostSettings hostSettings, SubscriberContext subscriberContext)
+
+        internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusClientWrapper serviceBusClient,
+            SubscriberContext subscriberContext)
         {
             const int channelCapacity = 2_000;
 
@@ -42,8 +42,8 @@
             _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             IsRunning = Task.FromResult(true);
+
             _logger = logger;
-            _hostSettings = hostSettings;
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
 
@@ -56,12 +56,14 @@
                 SingleReader = true,
                 SingleWriter = false
             };
-
+            BusClient = serviceBusClient;
             _queue = Channel.CreateBounded<ServiceBusReceivedMessage>(channelOptions);
 
             _readerTask = Task.Run(ReadFromChannel);
         }
 
+        public IServiceBusClientWrapper BusClient { get; }
+        
         public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -73,7 +75,7 @@
             _middlewareExecutor = middlewareExecutor;
             return this;
         }
-        
+
         public Task<bool> IsRunning { get; set; }
 
         public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
@@ -88,7 +90,7 @@
 
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
-            await CreateReceiversAsync();
+            await CreateReceiversAsync(stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -119,9 +121,7 @@
                 _queue.Writer.Complete();
 
                 await _taskCompletion.Task;
-
-                await _receiver.DisposeAsync();
-                await _hostSettings.ServiceBusClient.DisposeAsync();
+                await BusClient.DisposeAsync();
 
                 IsRunning = _taskCompletion.Task;
 
@@ -134,19 +134,31 @@
             }
         }
 
-        private async Task CreateReceiversAsync()
+        private async Task CreateReceiversAsync(CancellationToken stoppingToken)
         {
-            await _receiveObservable.PreStartReceive(_subscriberContext);
+            try
+            {
+                await _receiveObservable.PreStartReceive(_subscriberContext);
 
-            _receiver ??= _hostSettings.ServiceBusClient.CreateReceiver(_subscriberContext.TopicSubscriptionName,
-                new ServiceBusReceiverOptions
+                var options = new ServiceBusReceiverOptions
                 {
-                    PrefetchCount = _subscriberContext.Specification.MaxMessages,
+                    PrefetchCount = _subscriberContext.Specification.PrefetchCount,
                     Identifier = _subscriberContext.Specification.SubscriptionName,
-                    ReceiveMode = ServiceBusReceiveMode.PeekLock
-                });
+                    ReceiveMode = _subscriberContext.Specification.ReceiveMode
+                };
+                
+                if (!BusClient.Receiver.TryGet(_subscriberContext.TopicSubscriptionName, options,
+                        out _receiver))
+                {
+                }
 
-            await _receiveObservable.PostStartReceive(_subscriberContext);
+                await _receiveObservable.PostStartReceive(_subscriberContext);
+            }
+            catch (Exception e)
+            {
+                await _receiveObservable.FaultStartReceive(_subscriberContext, e);
+                await StopAsync(stoppingToken);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -178,7 +190,7 @@
                         messageConsumerContext.Add(messageContext);
 
                         if (_receiveObservable.Count >= 0)
-                            await _receiveObservable.PreReceive(messageContext);
+                            await _receiveObservable.PreReceiveAsync(messageContext);
 
                         counter++;
                     }

@@ -4,6 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Abstractions.Observers;
+    using Configurations.Host;
     using Middlewares;
     using Middlewares.Observers;
 
@@ -11,6 +12,7 @@
         IReceiveObserverConnector,
         IFinishConsumerMiddlewareObserverConnector
     {
+        IServiceBusClientWrapper BusClient { get; }
     }
 
     public interface IReceiverListener :

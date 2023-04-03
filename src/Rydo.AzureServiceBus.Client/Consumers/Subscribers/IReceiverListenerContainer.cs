@@ -9,7 +9,7 @@
 
         void SetServiceProvider(IServiceProvider provider);
 
-        public void AddSubscriber(string topicName, IReceiverListener receiverListener);
+        public void TryAddListener(string topicName, IReceiverListener receiverListener);
 
         ImmutableDictionary<string, IReceiverListener> Listeners { get; }
     }

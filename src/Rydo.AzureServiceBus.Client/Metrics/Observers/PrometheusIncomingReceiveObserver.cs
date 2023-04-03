@@ -1,5 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Metrics.Observers
 {
+    using System;
     using System.Threading.Tasks;
     using Abstractions.Observers;
     using Consumers.Subscribers;
@@ -16,7 +17,12 @@
             return Task.CompletedTask;
         }
 
-        public Task PreReceive(MessageContext context)
+        public Task FaultStartReceive(SubscriberContext context, Exception exception)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task PreReceiveAsync(MessageContext context)
         {
             return Task.CompletedTask;
         }

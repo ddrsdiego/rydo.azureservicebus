@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using Azure.Messaging.ServiceBus;
 
     public interface ISubscriberContextContainer
     {
@@ -11,9 +12,9 @@
         void WithConsumerHandler<T>();
 
         void Add();
-        
+
         void Add(string subscriptionName);
-        
+
         void Add(Action<SubscriberConfiguratorBuilder> configurator);
 
         void Add(string subscriptionName, Action<SubscriberConfiguratorBuilder> configurator);
@@ -37,9 +38,13 @@
 
         string SubscriptionName { get; }
 
-        int LockDurationInMinutes { get; set; }
+        int LockDurationInSeconds { get; set; }
 
         int MaxDeliveryCount { get; set; }
+        
+        int PrefetchCount { get; set; }
+        
+        ServiceBusReceiveMode ReceiveMode { get; set; }
     }
 
     internal sealed class ConsumerConfigurator : IConsumerConfigurator
@@ -55,8 +60,10 @@
         public int MaxMessages { get; set; }
         public int BufferSize { get; set; }
         public string SubscriptionName { get; }
-        public int LockDurationInMinutes { get; set; }
+        public int LockDurationInSeconds { get; set; }
         public int MaxDeliveryCount { get; set; }
+        public int PrefetchCount { get; set; }
         public int AutoDeleteAfterIdleInHours { get; set; }
+        public ServiceBusReceiveMode ReceiveMode { get; set; }
     }
 }

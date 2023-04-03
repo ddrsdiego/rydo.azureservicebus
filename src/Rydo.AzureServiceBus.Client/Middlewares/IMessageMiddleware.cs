@@ -2,14 +2,12 @@ namespace Rydo.AzureServiceBus.Client.Middlewares
 {
     using System.Threading.Tasks;
     using Abstractions.Observers;
-    using Abstractions.Observers.Observables;
     using Handlers;
 
     public interface IMessageMiddleware :
+        IConsumerObserverConnector,
         IConsumerMiddlewareObserverConnector
     {
-        ConsumerObservable ConsumerObservable { get; }
-
         /// <summary>
         /// The method that is called when the middleware is invoked
         /// </summary>

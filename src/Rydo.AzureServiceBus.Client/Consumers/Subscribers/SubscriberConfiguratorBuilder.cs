@@ -1,19 +1,24 @@
 namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
     using System;
+    using Azure.Messaging.ServiceBus;
     using CSharpFunctionalExtensions;
     using Configurations;
 
     public sealed class SubscriberConfiguratorBuilder
     {
         private readonly string _topicName;
+        private readonly string _subscriptionName;
+
+        private int _prefetchCount;
         private int _maxMessages;
-        private string _subscriptionName;
         private int _lockDurationInMinutes;
         private int _bufferSize;
         private int _maxDeliveryCount;
         private bool _neverAutoDelete;
         private int _autoDeleteAfterIdleInHours;
+        private ServiceBusReceiveMode _receiveMode;
+
 
         internal SubscriberConfiguratorBuilder(string topicName, string subscriptionName)
         {
@@ -21,15 +26,27 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
             _subscriptionName = subscriptionName ?? throw new ArgumentNullException(nameof(subscriptionName));
 
             HasBuild = false;
-            _autoDeleteAfterIdleInHours = TopicConsumerDefaultValues.AutoDeleteAfterIdleInHours;
-            _neverAutoDelete = TopicConsumerDefaultValues.NeverAutoDelete;
-            _maxDeliveryCount = TopicConsumerDefaultValues.MaxDeliveryCount;
+
+            _receiveMode = ServiceBusReceiveMode.PeekLock;
             _bufferSize = TopicConsumerDefaultValues.BufferSize;
             _maxMessages = TopicConsumerDefaultValues.MaxMessages;
+            _prefetchCount = TopicConsumerDefaultValues.PrefetchCount;
+            _neverAutoDelete = TopicConsumerDefaultValues.NeverAutoDelete;
+            _maxDeliveryCount = TopicConsumerDefaultValues.MaxDeliveryCount;
             _lockDurationInMinutes = TopicConsumerDefaultValues.LockDurationInSeconds;
+            _autoDeleteAfterIdleInHours = TopicConsumerDefaultValues.AutoDeleteAfterIdleInHours;
         }
 
         public bool HasBuild { get; private set; }
+
+        public SubscriberConfiguratorBuilder PrefetchCount(int prefetchCount)
+        {
+            if (prefetchCount <= 0)
+                prefetchCount = TopicConsumerDefaultValues.PrefetchCount;
+
+            _prefetchCount = prefetchCount;
+            return this;
+        }
 
         public SubscriberConfiguratorBuilder AutoDeleteAfterIdleInHours(int autoDeleteAfterIdleInHours)
         {
@@ -93,13 +110,24 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
             return this;
         }
 
+        public SubscriberConfiguratorBuilder ReceiveMode(ServiceBusReceiveMode receiveMode)
+        {
+            _receiveMode = receiveMode;
+            return this;
+        }
+
         internal IConsumerConfigurator ConsumerConfigurator { get; private set; }
 
         internal Result<IConsumerConfigurator> Build()
         {
+            if (_prefetchCount <= _maxMessages)
+                _prefetchCount = _maxMessages;
+
             ConsumerConfigurator = new ConsumerConfigurator(_topicName, _subscriptionName)
             {
-                LockDurationInMinutes = _lockDurationInMinutes,
+                ReceiveMode = _receiveMode,
+                PrefetchCount = _prefetchCount,
+                LockDurationInSeconds = _lockDurationInMinutes,
                 MaxDeliveryCount = _maxDeliveryCount,
                 MaxMessages = _maxMessages,
                 BufferSize = _bufferSize,

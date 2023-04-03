@@ -13,13 +13,13 @@
         internal ServiceBusReceiverConfigurator(IServiceCollection services)
         {
             _services = services;
-            ReceiverListenerContainer = new ReceiverListenerContainer();
+            ListenerContainer = new ReceiverListenerContainer();
             ReceiverContextContainer = new ReceiverContextContainer(services);
         }
 
         internal IReceiverContextContainer ReceiverContextContainer { get; }
 
-        internal IReceiverListenerContainer ReceiverListenerContainer { get; }
+        internal IReceiverListenerContainer ListenerContainer { get; }
 
         /// <summary>
         /// Configures a listener to the context having as a parameter the topic name assigned to the consumer handler.

@@ -15,6 +15,6 @@
         /// <summary>
         /// A custom administration client that will be used instead of one defined by the settings provided here.
         /// </summary>
-        ServiceBusAdministrationClient ServiceBusAdministrationClient { get; }
+        ServiceBusAdministrationClient AdminClient { get; }
     }
 }

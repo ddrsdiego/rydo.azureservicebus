@@ -7,9 +7,10 @@
 
     internal sealed class DeserializerConsumerMiddleware : MessageMiddleware
     {
-        private readonly IMessageRecordFactory _messageRecordFactory;
         private const string DeserializerConsumerMessagesStep = "DESERIALIZER-CONSUMER-MESSAGES";
-
+        
+        private readonly IMessageRecordFactory _messageRecordFactory;
+        
         public DeserializerConsumerMiddleware(IMessageRecordFactory messageRecordFactory)
             : base(nameof(DeserializerConsumerMiddleware))
         {
@@ -25,8 +26,7 @@
             {
                 var messageContext = messages[index];
 
-                if (ConsumerObservable.Count > 0)
-                    await ConsumerObservable.PreConsumer(messageContext);
+                await ConsumerObservable.PreConsumerAsync(messageContext);
 
                 var valueTask = _messageRecordFactory.ToMessageRecord(messageContext,
                     context.SubscriberContext.ContractType, context.CancellationToken);
@@ -37,8 +37,7 @@
 
                 messageContext.SetMessageRecord(messageRecord);
 
-                if (ConsumerObservable.Count > 0)
-                    await ConsumerObservable.PostConsumer(messageContext);
+                await ConsumerObservable.PostConsumerAsync(messageContext);
             }
 
             static async ValueTask<MessageRecord> SlowAdapter(ValueTask<MessageRecord> task)

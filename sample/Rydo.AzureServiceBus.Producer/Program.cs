@@ -65,9 +65,9 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 app.MapPost("api/v1/accounts/banlance", async (ServiceBusClient serviceBusClient) =>
 {
     const int capacity = 1_000;
-    const string accountCreatedTopic = "azure.servicebus.sample.account-updated";
+    const string accountUpdatesTopic = "azure.servicebus.sample.account-updated";
 
-    var sender = serviceBusClient.CreateSender(accountCreatedTopic);
+    var sender = serviceBusClient.CreateSender(accountUpdatesTopic);
 
     var tasks = new List<Task>(capacity);
     for (var index = 1; index <= capacity; index++)

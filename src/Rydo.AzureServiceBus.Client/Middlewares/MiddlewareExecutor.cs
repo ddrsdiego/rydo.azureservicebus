@@ -10,7 +10,7 @@
     using Microsoft.Extensions.Logging;
     using Observers;
 
-    public sealed class MiddlewareExecutor : IMiddlewareExecutor
+    internal sealed class MiddlewareExecutor : IMiddlewareExecutor
     {
         private readonly ILogger<MiddlewareExecutor> _logger;
         private readonly Dictionary<int, IMessageMiddleware> _consumerMiddlewares;
@@ -82,8 +82,9 @@
             var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
             var middleware = (IMessageMiddleware) scope.ServiceProvider.GetService(configuration.Type);
 
-            middleware.ConsumerObservable.Connect(new LogConsumerObserver(logger));
+            middleware.ConnectConsumerObserver(new LogConsumerObserver(logger));
             middleware.ConnectConsumerMiddlewareObserver(new LogConsumerMiddlewareObserver(logger));
+            
             return middleware;
         }
     }

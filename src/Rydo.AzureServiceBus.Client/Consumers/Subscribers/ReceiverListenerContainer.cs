@@ -29,7 +29,7 @@
             }
         }
 
-        public void AddSubscriber(string topicName, IReceiverListener receiverListener)
+        public void TryAddListener(string topicName, IReceiverListener receiverListener)
         {
             if (topicName == null || string.IsNullOrEmpty(topicName))
                 throw new ArgumentNullException(nameof(topicName));

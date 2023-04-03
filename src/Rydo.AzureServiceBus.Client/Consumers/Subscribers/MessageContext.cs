@@ -14,6 +14,7 @@
         }
 
         public MessageRecord Record;
+        
         internal readonly ServiceBusReceivedMessage ReceivedMessage;
 
         internal void SetMessageRecord(MessageRecord messageRecord)

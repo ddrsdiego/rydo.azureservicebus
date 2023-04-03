@@ -39,6 +39,8 @@
                     if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                         continue;
 
+                    await receiverListener.BusClient.Admin.CreateEntitiesIfNotExistAsync(consumerContext, stoppingToken);
+                    
                     if (!await receiverListener.IsRunning)
                     {
                         // DEFINE STRATEGY TO STOP THE LISTENER

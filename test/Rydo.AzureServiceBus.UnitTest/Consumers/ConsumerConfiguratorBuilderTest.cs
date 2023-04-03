@@ -49,7 +49,7 @@
 
             consumerConfigurator.Value.BufferSize.Should().Be(1_000);
             consumerConfigurator.Value.MaxDeliveryCount.Should().Be(10);
-            consumerConfigurator.Value.LockDurationInMinutes.Should().Be(5);
+            consumerConfigurator.Value.LockDurationInSeconds.Should().Be(5);
             consumerConfigurator.Value.MaxMessages.Should().Be(2000);
             consumerConfigurator.Value.SubscriptionName.Should().Be(SubscriptionName);
             consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);
@@ -68,7 +68,7 @@
 
             consumerConfigurator.Value.BufferSize.Should().Be(1_000);
             consumerConfigurator.Value.MaxDeliveryCount.Should().Be(10);
-            consumerConfigurator.Value.LockDurationInMinutes.Should().Be(5);
+            consumerConfigurator.Value.LockDurationInSeconds.Should().Be(5);
             consumerConfigurator.Value.MaxMessages.Should().Be(2000);
             consumerConfigurator.Value.SubscriptionName.Should().Be(SubscriptionName);
             consumerConfigurator.Value.MaxDeliveryCount.Should().Be(TopicConsumerDefaultValues.MaxDeliveryCount);

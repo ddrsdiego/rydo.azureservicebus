@@ -23,8 +23,4 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
             _services.TryAddSingleton(sp => new ServiceBusAdministrationClient(connectionString));
         }
     }
-
-    internal sealed class HostContextContainer
-    {
-    }
 }
