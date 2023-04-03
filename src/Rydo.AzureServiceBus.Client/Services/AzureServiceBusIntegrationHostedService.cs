@@ -25,6 +25,19 @@
             _receiverListenerContainer = receiverListenerContainer;
         }
 
+        public override async Task StartAsync(CancellationToken cancellationToken)
+        {
+            foreach (var (topicName, receiverListener) in _receiverListenerContainer.Listeners)
+            {
+                if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
+                    continue;
+
+                await receiverListener.BusClient.Admin.CreateEntitiesIfNotExistAsync(consumerContext, _source.Token);
+            }
+            
+            await base.StartAsync(cancellationToken);
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Delay(MillisecondsDelayToStartConsumer, stoppingToken);
@@ -39,14 +52,12 @@
                     if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                         continue;
 
-                    await receiverListener.BusClient.Admin.CreateEntitiesIfNotExistAsync(consumerContext, stoppingToken);
-                    
                     if (!await receiverListener.IsRunning)
                     {
                         // DEFINE STRATEGY TO STOP THE LISTENER
                         continue;
                     }
-
+                    
                     receiverListener.IsRunning = Task.Run(async () => await receiverListener.StartAsync(_source.Token),
                         stoppingToken);
                 }

@@ -18,8 +18,8 @@ builder.Services.AddAzureServiceBusClient(config =>
     config.Host.Configure(sbConnectionString);
     config.Producers.Configure(producers =>
     {
-        producers.AddProducers(TopicNameConstants.AccountCreatedTopic);
-        producers.AddProducers(TopicNameConstants.AccountUpdatedTopic);
+        producers.AddProducers(TopicNameConstants.AccountCreated);
+        producers.AddProducers(TopicNameConstants.AccountUpdated);
     });
 
     config.Receiver.Configure<AccountCreatedConsumerHandler>(receiver =>

@@ -52,7 +52,7 @@
 
         public Task PreReceiveAsync(MessageContext context)
         {
-            _logger.LogDebug($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
+            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
                 IncomingMessageReceiverLogType,
                 new MessageContextLog(context));
 
@@ -64,18 +64,20 @@
     {
         private readonly MessageContext _context;
 
-        public MessageContextLog(MessageContext context) => _context = context;
+        internal MessageContextLog(MessageContext context) => _context = context;
 
+        public string ContextId => _context.MessageConsumerContext.ContextId;
         public string MessageId => _context.ReceivedMessage.MessageId;
         public string ContentType => _context.ReceivedMessage.ContentType;
         public string PartitionKey => _context.ReceivedMessage.PartitionKey;
+        public string Topic => _context.MessageConsumerContext.SubscriberContext.TopicSubscriptionName;
     }
 
     internal sealed class SubscriberContextLog
     {
         private readonly SubscriberContext _context;
 
-        public SubscriberContextLog(SubscriberContext context) => _context = context;
+        internal SubscriberContextLog(SubscriberContext context) => _context = context;
 
         public string TopicName => _context.Specification.TopicName;
         public string SubscriptionName => _context.Specification.SubscriptionName;

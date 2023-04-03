@@ -15,7 +15,7 @@
         }
     }
 
-    [TopicConsumer(TopicNameConstants.AccountCreatedTopic)]
+    [TopicConsumer(TopicNameConstants.AccountCreated)]
     public class AccountCreatedConsumerHandler : ConsumerHandler<AccountCreated>
     {
         private readonly ILogger<AccountCreatedConsumerHandler> _logger;

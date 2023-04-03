@@ -5,6 +5,7 @@ using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using Rydo.AzureServiceBus.Consumer.ConsumerHandlers;
+using Rydo.AzureServiceBus.Producer;
 using AccountCreated = Rydo.AzureServiceBus.Consumer.Models.AccountCreated;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,7 +34,7 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
     const int capacity = 10;
     const string accountCreatedTopic = "azure.servicebus.sample.account-created";
 
-    var sender = serviceBusClient.CreateSender(accountCreatedTopic);
+    var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountCreated);
 
     var tasks = new List<Task>(capacity);
     for (var index = 1; index <= capacity; index++)
@@ -65,9 +66,9 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 app.MapPost("api/v1/accounts/banlance", async (ServiceBusClient serviceBusClient) =>
 {
     const int capacity = 1_000;
-    const string accountUpdatesTopic = "azure.servicebus.sample.account-updated";
+    const string accountUpdatesTopic = "rydo.customers.account-account-updated";
 
-    var sender = serviceBusClient.CreateSender(accountUpdatesTopic);
+    var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountUpdated);
 
     var tasks = new List<Task>(capacity);
     for (var index = 1; index <= capacity; index++)

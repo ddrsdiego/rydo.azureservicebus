@@ -14,7 +14,7 @@
             var res = typeof(AccountCreatedConsumerHandler).TryExtractTopicNameFromConsumer(out var topicOrQueueName);
             
             res.Should().BeTrue();
-            topicOrQueueName.Should().Be(TopicNameConstants.AccountCreatedTopic);
+            topicOrQueueName.Should().Be(TopicNameConstants.AccountCreated);
         }
     }
 }

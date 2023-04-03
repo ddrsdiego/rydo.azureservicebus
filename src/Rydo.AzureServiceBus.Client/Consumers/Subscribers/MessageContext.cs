@@ -6,8 +6,6 @@
 
     public sealed class MessageContext
     {
-        private MessageConsumerContext _messageConsumerContext;
-
         public MessageContext(ServiceBusReceivedMessage receivedMessage)
         {
             ReceivedMessage = receivedMessage;
@@ -15,17 +13,18 @@
 
         public MessageRecord Record;
         
+        internal MessageConsumerContext MessageConsumerContext;
         internal readonly ServiceBusReceivedMessage ReceivedMessage;
 
         internal void SetMessageRecord(MessageRecord messageRecord)
         {
             Record = messageRecord;
-            Record.SetMessageConsumerContext(_messageConsumerContext);
+            Record.SetMessageConsumerContext(MessageConsumerContext);
         }
 
         internal void SetMessageConsumerContext(MessageConsumerContext context)
         {
-            _messageConsumerContext = context ?? throw new ArgumentNullException(nameof(context));
+            MessageConsumerContext = context ?? throw new ArgumentNullException(nameof(context));
         }
     }
 }

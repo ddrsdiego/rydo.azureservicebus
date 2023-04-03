@@ -73,10 +73,7 @@
         public bool TryGetConsumerContext(string topicName, out SubscriberContext context)
         {
             context = default;
-            if (!Contexts.TryGetValue(topicName, out context))
-                return false;
-            
-            return true;
+            return Contexts.TryGetValue(topicName, out context);
         }
 
         private static string GetSubscriptionName(IConsumerConfigurator consumerConfigurator, Type type)

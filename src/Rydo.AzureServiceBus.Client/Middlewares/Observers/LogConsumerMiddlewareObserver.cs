@@ -20,7 +20,7 @@
             context.StarMiddlewareWatch();
 
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
-            _logger.LogInformation(
+            _logger.LogDebug(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
                 step,
                 messageAudit);
@@ -35,7 +35,7 @@
             var stepFormat = $"{step}-END";
             
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
-            _logger.LogInformation(
+            _logger.LogDebug(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
                 step,
                 messageAudit);

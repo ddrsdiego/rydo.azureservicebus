@@ -90,7 +90,7 @@
         [Test]
         public void Should_Create_ConsumerConfigurator_With_Default_Values()
         {
-            var builder = new SubscriberConfiguratorBuilder(TopicNameConstants.AccountCreatedTopic, SubscriptionName);
+            var builder = new SubscriberConfiguratorBuilder(TopicNameConstants.AccountCreated, SubscriptionName);
             var consumerConfigurator = builder.Build();
 
             consumerConfigurator.Value.BufferSize.Should().Be(TopicConsumerDefaultValues.BufferSize);
