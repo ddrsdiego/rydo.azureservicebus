@@ -5,6 +5,7 @@
     using System.Collections.Immutable;
     using System.Linq;
     using Extensions;
+    using Handlers;
     using Microsoft.Extensions.DependencyInjection;
     using Producers;
 
@@ -25,7 +26,7 @@
             _types = types ?? throw new ArgumentNullException(nameof(types));
         }
 
-        public void WithConsumerHandler<T>() => _consumerHandler = typeof(T);
+        public void WithConsumerHandler<T>() where T : class, IConsumerHandler => _consumerHandler = typeof(T);
 
         public void Add()
         {

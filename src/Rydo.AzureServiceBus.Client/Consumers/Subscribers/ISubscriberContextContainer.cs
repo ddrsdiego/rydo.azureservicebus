@@ -4,12 +4,13 @@
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using Azure.Messaging.ServiceBus;
+    using Handlers;
 
     public interface ISubscriberContextContainer
     {
         void WithTypes(IEnumerable<Type> types);
 
-        void WithConsumerHandler<T>();
+        void WithConsumerHandler<T>() where T : class, IConsumerHandler;
 
         void Add();
 
@@ -41,9 +42,9 @@
         int LockDurationInSeconds { get; set; }
 
         int MaxDeliveryCount { get; set; }
-        
+
         int PrefetchCount { get; set; }
-        
+
         ServiceBusReceiveMode ReceiveMode { get; set; }
     }
 

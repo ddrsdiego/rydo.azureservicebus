@@ -18,7 +18,7 @@ namespace Rydo.AzureServiceBus.Consumer.ConsumerHandlers
     [TopicConsumer(TopicNameConstants.AccountUpdated)]
     public class AccountUpdatedConsumerHandler : ConsumerHandler<AccountUpdated>
     {
-        public override Task HandleAsync(IMessageConsumerContext context, CancellationToken cancellationToken)
+        public override Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

@@ -21,7 +21,7 @@ builder.Services.AddAzureServiceBusClient(config =>
         producers.AddProducers(TopicNameConstants.AccountCreated);
         producers.AddProducers(TopicNameConstants.AccountUpdated);
     });
-
+    
     config.Receiver.Configure<AccountCreatedConsumerHandler>(receiver =>
     {
         receiver.Subscriber.Add(sub =>

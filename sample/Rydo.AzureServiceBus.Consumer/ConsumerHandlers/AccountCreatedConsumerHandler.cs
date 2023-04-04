@@ -25,8 +25,7 @@
             _logger = logger;
         }
 
-        public override async Task HandleAsync(IMessageConsumerContext context,
-            CancellationToken cancellationToken)
+        public override async Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken)
         {
             var tasks = new Task[context.Length];
             var messageRecords = context.Messages.ToArray();

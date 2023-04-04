@@ -9,7 +9,7 @@
     {
         string HandlerId { get; }
 
-        Task HandleAsync(IMessageConsumerContext context, CancellationToken cancellationToken);
+        Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken);
     }
 
     public interface IConsumerHandler<TMessage> : IConsumerHandler
@@ -28,7 +28,7 @@
 
         public string HandlerId { get; }
 
-        public abstract Task HandleAsync(IMessageConsumerContext context, CancellationToken cancellationToken);
+        public abstract Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken);
 
         protected virtual void Dispose(bool disposing)
         {

@@ -42,7 +42,7 @@
             catch (Exception e)
             {
                 _logger.LogError("", e);
-                
+
                 messageRecord =
                     MessageRecord.GetInvalidInstance(messageId, partitionKey);
             }

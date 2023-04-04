@@ -49,7 +49,7 @@
 
             _cancellationToken = new CancellationToken();
 
-            var channelOptions = new BoundedChannelOptions(channelCapacity)
+            var channelOptions = new BoundedChannelOptions(subscriberContext.Specification.Consumer.BufferSize)
             {
                 AllowSynchronousContinuations = true,
                 FullMode = BoundedChannelFullMode.Wait,
@@ -59,11 +59,11 @@
             BusClient = serviceBusClient;
             _queue = Channel.CreateBounded<ServiceBusReceivedMessage>(channelOptions);
 
-            _readerTask = Task.Run(ReadFromChannel);
+            _readerTask = Task.Run(async () => await ReadFromChannel());
         }
 
         public IServiceBusClientWrapper BusClient { get; }
-        
+
         public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -122,6 +122,7 @@
 
                 await _taskCompletion.Task;
                 await BusClient.DisposeAsync();
+                _readerTask.Dispose();
 
                 IsRunning = _taskCompletion.Task;
 
@@ -146,7 +147,7 @@
                     Identifier = _subscriberContext.Specification.SubscriptionName,
                     ReceiveMode = _subscriberContext.Specification.ReceiveMode
                 };
-                
+
                 if (!BusClient.Receiver.TryGet(_subscriberContext.TopicSubscriptionName, options,
                         out _receiver))
                 {
