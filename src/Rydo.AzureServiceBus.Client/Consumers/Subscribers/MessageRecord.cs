@@ -5,43 +5,61 @@
     using System.Text.Json;
     using Handlers;
 
-    public sealed class MessageRecord
+    public sealed class MessageRecord<TMessage>
+        : MessageRecord
     {
-        private readonly object _messageValue;
+        public MessageRecord()
+            : this("", "", null, false)
+        {
+        }
 
-        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
+        internal MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
+            : base(messageId, partitionKey, messageValue, isValid)
+        {
+        }
+
+        public TMessage Value { get; private set; }
+
+        internal void SetMessage(TMessage message) => Value = message;
+    }
+
+    public class MessageRecord
+    {
+        internal MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
         {
             IsValid = isValid;
             MessageId = messageId;
             PartitionKey = partitionKey;
-            _messageValue = messageValue;
+            MessageValue = messageValue;
         }
 
         /// <summary>
         /// 
         /// </summary>
         public readonly string MessageId;
-        
+
+        internal readonly object MessageValue;
+
         /// <summary>
         /// 
         /// </summary>
         public readonly string PartitionKey;
-        
+
         /// <summary>
         /// 
         /// </summary>
         internal bool IsValid { get; }
-        
+
         /// <summary>
         /// 
         /// </summary>
         internal bool IsInvalid => !IsValid;
-        
+
         internal MessageConsumerContext MessageConsumerCtx;
 
         internal static MessageRecord GetInstance(string messageId, string partitionKey, object messageValue) =>
             new MessageRecord(messageId, partitionKey, messageValue, true);
-        
+
         internal static MessageRecord GetInvalidInstance(string messageId, string partitionKey) =>
             new MessageRecord(messageId, partitionKey, null, false);
 
@@ -54,11 +72,11 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Value<T>()
         {
-            if (_messageValue is null) return default;
+            if (MessageValue is null) return default;
 
             try
             {
-                return (T) _messageValue;
+                return (T) MessageValue;
             }
             catch (Exception e)
             {
@@ -71,7 +89,7 @@
         public string ValueAsJsonString()
         {
             var valueAsJsonString =
-                JsonSerializer.Serialize(_messageValue);
+                JsonSerializer.Serialize(MessageValue);
             return valueAsJsonString;
         }
 
