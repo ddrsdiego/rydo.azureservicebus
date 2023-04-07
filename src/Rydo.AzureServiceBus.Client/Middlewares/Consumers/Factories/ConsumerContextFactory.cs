@@ -18,11 +18,7 @@
         }
 
         private Type MessageType { get; }
-
-        static ConsumerContextFactory()
-        {
-        }
-
+        
         public static ConsumerContextFactory GetConsumerContext(Type messageType)
         {
             var consumerContextFactory = Executors.GetOrAdd(messageType, _ =>
