@@ -6,22 +6,27 @@ using Microsoft.Extensions.Azure;
 using Microsoft.OpenApi.Models;
 using Rydo.AzureServiceBus.Consumer.ConsumerHandlers;
 using Rydo.AzureServiceBus.Producer;
-using AccountCreated = Rydo.AzureServiceBus.Consumer.Models.AccountCreated;
+using AccountCreated = Rydo.AzureServiceBus.Producer.ConsumerHandlers.AccountCreated;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var connectionString = builder.Configuration.GetConnectionString("ServiceBus");
 builder.Services.AddAzureClients(config =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("ServiceBus");
-
     config.AddServiceBusClient(connectionString);
     config.AddServiceBusAdministrationClient(connectionString);
 });
 
+builder.Services.AddLogging();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo {Title = Assembly.GetEntryAssembly()?.GetName().Name}));
+
+// builder.Services.AddAzureServiceBusClient(x =>
+// {
+//     x.Host.Configure(connectionString);
+//     x.Receiver.Configure<AccountCreatedConsumerHandler>();
+// });
 
 var app = builder.Build();
 
@@ -31,11 +36,9 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Assembly.Get
 
 app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 {
-    const int capacity = 10;
-    const string accountCreatedTopic = "azure.servicebus.sample.account-created";
+    const int capacity = 1;
 
     var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountCreated);
-
     var tasks = new List<Task>(capacity);
     for (var index = 1; index <= capacity; index++)
     {
@@ -43,7 +46,7 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
 
         var accountCreatedMessage = new AccountCreated(accountNumber);
 
-        var producerName = Assembly.GetExecutingAssembly().GetName().Name;
+        var producerName = Assembly.GetExecutingAssembly().GetName().Name?.ToLowerInvariant();
         var payload = JsonSerializer.SerializeToUtf8Bytes(accountCreatedMessage);
 
         var message = new ServiceBusMessage(payload)

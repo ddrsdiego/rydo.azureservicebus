@@ -9,12 +9,15 @@
 
     internal static class CustomHandlerEx
     {
-        public static Result<(Type ContractType, Type HandlerType)> TryExtractCustomerHandlers(this IEnumerable<Type> types, string topicName)
+        internal static Result<Type> TryExtractCustomerHandlers(this Type type, string topicName)
         {
-            var enumerableTypes = types as Type[] ?? types.ToArray();
+            var enumerableTypes = new List<Type>
+            {
+                type
+            };
 
             var consumerHandlers =
-                new Dictionary<(string, string), (Type ContractType, Type HandlerType)>();
+                new Dictionary<(string, string), Type>();
 
             var assemblies = enumerableTypes.Select(x => x.Assembly);
             foreach (var exportedTypes in assemblies.Select(x => x.ExportedTypes))
@@ -25,15 +28,15 @@
                         continue;
 
                     (string, string) consumerHandlerId = (exportedType.Assembly.GetName().Name, exportedType.FullName);
-                    consumerHandlers.Add(consumerHandlerId, consumerHandlerType);
+                    consumerHandlers.Add(consumerHandlerId, consumerHandlerType.HandlerType);
                 }
             }
 
             var clientTypes = consumerHandlers
                 .FirstOrDefault(messageHandler => IsTopicConsumerAttribute(messageHandler, topicName));
 
-            return clientTypes.Value.HandlerType == null
-                ? Result.Failure<(Type ContractType, Type HandlerType)>($"No Custom Handler found for topic {topicName}")
+            return clientTypes.Value == null
+                ? Result.Failure<Type>($"No Custom Handler found for topic {topicName}")
                 : Result.Success(clientTypes.Value);
         }
 
@@ -53,11 +56,9 @@
             return true;
         }
 
-        private static bool IsTopicConsumerAttribute(
-            KeyValuePair<(string, string), (Type MessageContractType, Type MessageHandlerType)> clientTypes,
-            string topicName)
+        private static bool IsTopicConsumerAttribute(KeyValuePair<(string, string), Type> clientTypes, string topicName)
         {
-            var (key, (messageContractType, messageHandlerType)) = clientTypes;
+            var (key, messageHandlerType) = clientTypes;
             if (messageHandlerType is null)
                 throw new Exception();
 

@@ -42,7 +42,8 @@
             _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             IsRunning = Task.FromResult(true);
-
+            IsStopped = Task.FromResult(false);
+            
             _logger = logger;
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
@@ -77,6 +78,8 @@
         }
 
         public Task<bool> IsRunning { get; set; }
+        
+        public Task<bool> IsStopped { get; set; }
 
         public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
         {
@@ -148,7 +151,7 @@
                     ReceiveMode = _subscriberContext.Specification.ReceiveMode
                 };
 
-                if (!BusClient.Receiver.TryGet(_subscriberContext.TopicSubscriptionName, options,
+                if (!BusClient.Receiver.TryGet(_subscriberContext.QueueName, options,
                         out _receiver))
                 {
                 }

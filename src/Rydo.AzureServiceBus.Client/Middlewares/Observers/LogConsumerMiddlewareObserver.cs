@@ -33,9 +33,9 @@
             context.StopMiddlewareWatch();
 
             var stepFormat = $"{step}-END";
-            
+
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
-            _logger.LogDebug(
+            _logger.LogInformation(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
                 step,
                 messageAudit);
@@ -55,6 +55,9 @@
             return new MessageConsumerContextAuditMedata
             {
                 Step = step,
+                Queue = context.Queue,
+                Topic = context.Topic,
+                Subscription = context.Subscription,
                 ContextId = context.ContextId,
                 ContextLength = context.Length,
                 MiddlewareType = middlewareType,
@@ -70,5 +73,8 @@
         public long ContextLength { get; set; }
         public string Step { get; set; }
         public long ElapsedTime { get; set; }
+        public string Queue { get; set; }
+        public string Topic { get; set; }
+        public string Subscription { get; set; }
     }
 }

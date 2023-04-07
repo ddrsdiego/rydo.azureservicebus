@@ -15,8 +15,8 @@
         }
     }
 
-    [TopicConsumer(TopicNameConstants.AccountCreated)]
-    public class AccountCreatedConsumerHandler : ConsumerHandler<AccountCreated>
+    [TopicConsumer(typeof(AccountCreated), TopicNameConstants.AccountCreated)]
+    public class AccountCreatedConsumerHandler : IConsumerHandler<AccountCreated>
     {
         private readonly ILogger<AccountCreatedConsumerHandler> _logger;
 
@@ -25,21 +25,23 @@
             _logger = logger;
         }
 
-        public override async Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken)
+        public async Task Consume(IConsumerContext<AccountCreated> context)
         {
-            var tasks = new Task[context.Length];
-            var messageRecords = context.Messages.ToArray();
+            var tasks = new Task[context.Messages.Length];
 
+            var messageRecords = context.Messages.ToArray();
             for (var index = 0; index < messageRecords.Length; index++)
             {
-                var value = messageRecords[index].Value<AccountCreated>();
-                tasks[index] = Task.Delay(100, cancellationToken);
+                var accountCreated = messageRecords[index].Value;
+
+                // messageRecords[index].MarkToRetry("");
+
+                tasks[index] = Task.Delay(100);
             }
 
             for (var index = 0; index < tasks.Length; index++)
             {
-                if (tasks[index].IsCompletedSuccessfully)
-                    continue;
+                if (tasks[index].IsCompletedSuccessfully) continue;
                 await tasks[index];
             }
         }

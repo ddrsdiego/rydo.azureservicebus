@@ -5,27 +5,46 @@
     using System.Text.Json;
     using Handlers;
 
-    public sealed class MessageRecord<TMessage>
-        : MessageRecord
+    public interface IMessageRecord
     {
-        public MessageRecord()
-            : this("", "", null, false)
+    }
+
+    public interface IMessageRecord<out TMessage> :
+        IMessageRecord
+    {
+        string Key { get; }
+        string PartitionKey { get; }
+        TMessage Value { get; }
+    }
+
+    public class MessageRecord<TMessage> : 
+        IMessageRecord<TMessage>
+    {
+        internal MessageRecord(TMessage value, MessageRecord messageRecord)
         {
+            Key = messageRecord.MessageId;
+            Value = value;
+            PartitionKey = messageRecord.PartitionKey;
+            Message = messageRecord;
         }
 
-        internal MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
-            : base(messageId, partitionKey, messageValue, isValid)
+        public string Key { get; }
+        public string PartitionKey { get; }
+        public TMessage Value { get; }
+        internal MessageRecord Message { get; }
+
+        internal MessageConsumerContext MessageConsumerCtx;
+
+        internal void SetMessageConsumerContext(MessageConsumerContext messageConsumerContext)
         {
+            MessageConsumerCtx =
+                messageConsumerContext ?? throw new ArgumentNullException(nameof(messageConsumerContext));
         }
-
-        public TMessage Value { get; private set; }
-
-        internal void SetMessage(TMessage message) => Value = message;
     }
 
     public class MessageRecord
     {
-        internal MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
+        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
         {
             IsValid = isValid;
             MessageId = messageId;

@@ -46,6 +46,7 @@
         int PrefetchCount { get; set; }
 
         ServiceBusReceiveMode ReceiveMode { get; set; }
+        int ConsumerCounter { get; set; }
     }
 
     internal sealed class ConsumerConfigurator : IConsumerConfigurator
@@ -66,5 +67,6 @@
         public int PrefetchCount { get; set; }
         public int AutoDeleteAfterIdleInHours { get; set; }
         public ServiceBusReceiveMode ReceiveMode { get; set; }
+        public int ConsumerCounter { get; set; }
     }
 }

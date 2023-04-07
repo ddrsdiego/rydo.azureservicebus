@@ -5,22 +5,23 @@ namespace Rydo.AzureServiceBus.Consumer.ConsumerHandlers
 
     public class AccountUpdated
     {
-        public string AccountNumber { get; }
-        public DateTime CreatedAt { get; }
-
         public AccountUpdated(string accountNumber)
         {
             CreatedAt = DateTime.Now;
             AccountNumber = accountNumber;
         }
+
+        public DateTime CreatedAt { get; }
+
+        public string AccountNumber { get; }
     }
 
-    [TopicConsumer(TopicNameConstants.AccountUpdated)]
-    public class AccountUpdatedConsumerHandler : ConsumerHandler<AccountUpdated>
+    [TopicConsumer(typeof(AccountUpdated), TopicNameConstants.AccountUpdated)]
+    public class AccountUpdatedConsumerHandler : IConsumerHandler<AccountUpdated>
     {
-        public override Task Handle(IMessageConsumerContext context, CancellationToken cancellationToken)
+        public Task Consume(IConsumerContext<AccountUpdated> context)
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException();
         }
     }
 }

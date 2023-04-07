@@ -50,7 +50,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
                 var subscriptionOptions = new CreateSubscriptionOptions(subscriberContext.Specification.TopicName,
                     subscriberContext.Specification.SubscriptionName)
                 {
-                    ForwardTo = subscriberContext.TopicSubscriptionName,
+                    ForwardTo = subscriberContext.QueueName,
                     LockDuration = subscriberContext.Specification.LockDurationInSeconds,
                     MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
                 };
@@ -85,7 +85,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
         {
             try
             {
-                var queueOptions = new CreateQueueOptions(subscriberContext.TopicSubscriptionName)
+                var queueOptions = new CreateQueueOptions(subscriberContext.QueueName)
                 {
                     LockDuration = subscriberContext.Specification.LockDurationInSeconds,
                     MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
@@ -95,7 +95,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
                 await _adminClientClientObservable.VerifyQueueExitsAsync(queueOptions);
 
                 var queueExists =
-                    await _hostSettings.AdminClient.QueueExistsAsync(subscriberContext.TopicSubscriptionName,
+                    await _hostSettings.AdminClient.QueueExistsAsync(subscriberContext.QueueName,
                         cancellationToken);
 
                 if (!queueExists.Value)

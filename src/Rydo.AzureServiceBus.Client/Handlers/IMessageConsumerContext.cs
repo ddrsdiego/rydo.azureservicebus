@@ -19,11 +19,6 @@
         int Length { get; }
 
         /// <summary>
-        /// Queue or topic binding name.
-        /// </summary>
-        string QueueSubscription { get; }
-
-        /// <summary>
         /// List of messages to be processed. The Length and AnyMessage properties indicate if there are messages in the list.
         /// </summary>
         IEnumerable<MessageRecord> Messages

@@ -27,7 +27,7 @@
                 var messageContext = messages[index];
 
                 await ConsumerObservable.PreConsumerAsync(messageContext);
-
+                
                 var valueTask = _messageRecordFactory.ToMessageRecord(messageContext,
                     context.SubscriberContext.ContractType, context.CancellationToken);
 

@@ -15,6 +15,6 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
         public readonly Type ContractType;
         public readonly SubscriberSpecification Specification;
 
-        public string TopicSubscriptionName => $"{Specification.SubscriptionName}-{Specification.TopicName}";
+        public string QueueName => $"{Specification.SubscriptionName}-{Specification.TopicName}";
     }
 }

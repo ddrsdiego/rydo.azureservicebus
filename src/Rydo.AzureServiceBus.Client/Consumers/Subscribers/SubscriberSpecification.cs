@@ -10,6 +10,7 @@
             Consumer = consumer;
             TopicName = Consumer.TopicName;
             SubscriptionName = Consumer.SubscriptionName;
+            QueueName = $"{SubscriptionName}-{TopicName}";
             PrefetchCount = Consumer.PrefetchCount;
             MaxMessages = Consumer.MaxMessages;
             MaxDeliveryCount = Consumer.MaxDeliveryCount;
@@ -20,6 +21,7 @@
 
         public readonly string TopicName;
         public readonly string SubscriptionName;
+        public readonly string QueueName;
         public readonly int MaxMessages;
         public readonly TimeSpan LockDurationInSeconds;
         public readonly int MaxDeliveryCount;

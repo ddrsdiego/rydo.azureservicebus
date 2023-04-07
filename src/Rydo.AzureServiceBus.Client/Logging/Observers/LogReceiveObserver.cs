@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using Abstractions.Observers;
     using Consumers.Subscribers;
+    using Headers;
     using Microsoft.Extensions.Logging;
 
     internal sealed class LogReceiveObserver : IReceiveObserver
@@ -52,9 +53,9 @@
 
         public Task PreReceiveAsync(MessageContext context)
         {
-            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
+            _logger.LogDebug($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
                 IncomingMessageReceiverLogType,
-                new MessageContextLog(context));
+                MessageContextLog.GetInstance(context));
 
             return Task.CompletedTask;
         }
@@ -64,13 +65,18 @@
     {
         private readonly MessageContext _context;
 
-        internal MessageContextLog(MessageContext context) => _context = context;
+        private MessageContextLog(MessageContext context) => _context = context;
+
+        public static MessageContextLog GetInstance(MessageContext context) => new MessageContextLog(context);
 
         public string ContextId => _context.MessageConsumerContext.ContextId;
         public string MessageId => _context.ReceivedMessage.MessageId;
         public string ContentType => _context.ReceivedMessage.ContentType;
         public string PartitionKey => _context.ReceivedMessage.PartitionKey;
-        public string Topic => _context.MessageConsumerContext.SubscriberContext.TopicSubscriptionName;
+        public string Topic => _context.MessageConsumerContext.SubscriberContext.Specification.TopicName;
+        public string Subscription => _context.MessageConsumerContext.SubscriberContext.Specification.SubscriptionName;
+        public string Queue => _context.MessageConsumerContext.SubscriberContext.Specification.QueueName;
+        public string Producer => _context.Headers.GetString("producer");
     }
 
     internal sealed class SubscriberContextLog
@@ -83,7 +89,7 @@
         public string SubscriptionName => _context.Specification.SubscriptionName;
         public string Handler => _context.HandlerType.Name;
         public string Contract => _context.ContractType.Name;
-        public string QueueSubscription => _context.TopicSubscriptionName;
+        public string QueueSubscription => _context.QueueName;
         public int PrefetchCount => _context.Specification.PrefetchCount;
         public int MaxMessages => _context.Specification.MaxMessages;
         public int MaxDeliveryCount => _context.Specification.MaxDeliveryCount;

@@ -15,7 +15,7 @@
         private Type _consumerHandler;
         private readonly IServiceCollection _services;
 
-        public SubscriberContextContainer(IServiceCollection services)
+        internal SubscriberContextContainer(IServiceCollection services)
         {
             _services = services;
             Contexts = ImmutableDictionary<string, SubscriberContext>.Empty;
@@ -44,9 +44,13 @@
 
         public void Add(string subscriptionName, Action<SubscriberConfiguratorBuilder> configurator)
         {
-            _consumerHandler.TryExtractTopicNameFromConsumer(out var topicOrQueueName);
+            if (!_consumerHandler.TryExtractTopicName(out var topicOrQueueName))
+                return;
 
-            var result = new List<Type> {_consumerHandler}.TryExtractCustomerHandlers(topicOrQueueName);
+            if (!_consumerHandler.TryExtractContractType(out var contractType))
+                return;
+
+            var result = _consumerHandler.TryExtractCustomerHandlers(topicOrQueueName);
             if (result.IsFailure)
                 return;
 
@@ -65,8 +69,8 @@
             }
 
             var consumerSpecification = new SubscriberSpecification(consumerConfigurator);
-            var context = new SubscriberContext(consumerSpecification, result.Value.ContractType, _consumerHandler);
-            Contexts = Contexts.Add(context.TopicSubscriptionName, context);
+            var context = new SubscriberContext(consumerSpecification, contractType, _consumerHandler);
+            Contexts = Contexts.Add(context.QueueName, context);
         }
 
         public ImmutableDictionary<string, SubscriberContext> Contexts { get; private set; }

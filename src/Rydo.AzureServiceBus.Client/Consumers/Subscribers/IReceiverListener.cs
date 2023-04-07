@@ -24,6 +24,8 @@
 
         Task<bool> IsRunning { get; set; }
 
+        Task<bool> IsStopped { get; set; }
+        //
         Task<bool> StartAsync(CancellationToken stoppingToken);
         
         Task<bool> StopAsync(CancellationToken stoppingToken);

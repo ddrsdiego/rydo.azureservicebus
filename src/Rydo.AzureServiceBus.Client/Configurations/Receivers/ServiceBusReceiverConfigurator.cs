@@ -33,12 +33,16 @@
         /// </summary>
         /// <param name="container"></param>
         /// <typeparam name="T"></typeparam>
-        public void Configure<T>(Action<IReceiverContextContainer> container) where T : class, IConsumerHandler
+        public void Configure<T>(Action<IReceiverContextContainer> container)
+            where T : class, IConsumerHandler
         {
-            if (!typeof(T).TryExtractTopicNameFromConsumer(out var topicName))
+            if (!typeof(T).TryExtractTopicName(out var topicName))
                 throw new InvalidOperationException("");
 
-            ReceiverContextContainer.Subscriber.WithConsumerHandler<T>();
+            ReceiverContextContainer
+                .Subscriber
+                .WithConsumerHandler<T>();
+
             container(ReceiverContextContainer);
             _collection.TryAddScoped<T>();
         }

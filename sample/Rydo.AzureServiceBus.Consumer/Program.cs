@@ -21,23 +21,16 @@ builder.Services.AddAzureServiceBusClient(config =>
         producers.AddProducers(TopicNameConstants.AccountCreated);
         producers.AddProducers(TopicNameConstants.AccountUpdated);
     });
-    
-    config.Receiver.Configure<AccountCreatedConsumerHandler>(receiver =>
-    {
-        receiver.Subscriber.Add(sub =>
+    config.Receiver.Configure<AccountCreatedConsumerHandler>(
+        receiver =>
         {
-            sub.BufferSize(1_000);
-            sub.MaxMessages(1_000);
+            receiver.Subscriber.Add(sub =>
+            {
+                sub.BufferSize(1_000);
+                sub.MaxMessages(1_000);
+            });
         });
-    });
-    config.Receiver.Configure<AccountUpdatedConsumerHandler>(receiver =>
-    {
-        receiver.Subscriber.Add(sub =>
-        {
-            sub.BufferSize(1_000);
-            sub.MaxMessages(1_000);
-        });
-    });
+    // config.Receiver.Configure<AccountUpdatedConsumerHandler>();
 });
 
 builder.Host.UseSerilog((context, sp, config) =>
