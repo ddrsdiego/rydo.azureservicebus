@@ -2,7 +2,6 @@
 {
     using System;
     using Abstractions.Observers;
-    using Abstractions.Observers.Observables;
     using Azure.Messaging.ServiceBus;
     using Azure.Messaging.ServiceBus.Administration;
     using Consumers.Subscribers;

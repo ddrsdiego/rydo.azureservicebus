@@ -34,7 +34,7 @@
 
                 await receiverListener.BusClient.Admin.CreateEntitiesIfNotExistAsync(consumerContext, _source.Token);
             }
-            
+
             await base.StartAsync(cancellationToken);
         }
 
@@ -49,7 +49,7 @@
                     if (!receiverListener.IsRunning.IsCompleted)
                         continue;
 
-                    if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
+                    if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var subscriberContext))
                         continue;
 
                     if (!await receiverListener.IsRunning)
@@ -57,12 +57,12 @@
                         // DEFINE STRATEGY TO STOP THE LISTENER
                         continue;
                     }
-                    
+
                     receiverListener.IsRunning = Task.Run(async () => await receiverListener.StartAsync(_source.Token),
                         stoppingToken);
                 }
 
-                await Task.Delay(1_000, _source.Token);
+                await Task.Delay(100, _source.Token);
             }
         }
 

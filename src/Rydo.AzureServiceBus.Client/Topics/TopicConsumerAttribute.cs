@@ -3,22 +3,21 @@ namespace Rydo.AzureServiceBus.Client.Topics
     using System;
 
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TopicConsumerAttribute : TopicAttribute
+    public sealed class TopicConsumerAttribute : Attribute
     {
-        public const string FullNameTopicConsumerAttribute =
+        internal const int TopicNamePosition = 1;
+        internal const int ContractTypeNamePosition = 0;
+        
+        internal const string FullNameTopicConsumerAttribute =
             "Rydo.AzureServiceBus.Client.Topics.TopicConsumerAttribute";
 
-        public TopicConsumerAttribute(string topicName)
-            : base(topicName)
+        public TopicConsumerAttribute(Type contractType, string topicName)
         {
-        }
-
-        public TopicConsumerAttribute(string topicName, string subscriptionName)
-            : base(topicName)
-        {
-            SubscriptionName = subscriptionName;
+            TopicName = topicName ?? throw new ArgumentNullException(nameof(topicName));
+            ContractType = contractType ?? throw new ArgumentNullException(nameof(contractType));
         }
         
-        public string SubscriptionName { get; }
+        public Type ContractType { get; }
+        public string TopicName { get; }
     }
 }

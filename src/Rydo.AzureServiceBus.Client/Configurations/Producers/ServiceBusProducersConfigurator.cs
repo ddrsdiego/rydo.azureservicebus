@@ -5,7 +5,7 @@
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Rydo.AzureServiceBus.Client.Producers;
 
-    public sealed class ServiceBusProducersConfigurator : IAzureServiceBusProducersConfigurator
+    public sealed class ServiceBusProducersConfigurator : IServiceBusProducersConfigurator
     {
         private readonly IServiceCollection _services;
         private readonly IProducerContextContainer _producerContextContainer;

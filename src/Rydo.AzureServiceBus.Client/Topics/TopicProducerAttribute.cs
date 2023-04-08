@@ -8,14 +8,17 @@
     }
     
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class TopicProducerAttribute : TopicAttribute
+    public sealed class TopicProducerAttribute : Attribute
     {
-        public const string FullNameTopicProducerAttribute =
+        internal const int TopicNamePosition = 0;
+        internal const string FullNameTopicProducerAttribute =
             "Rydo.AzureServiceBus.Client.Topics.TopicProducerAttribute";
 
         public TopicProducerAttribute(string topicName)
-            : base(topicName)
         {
+            TopicName = topicName;
         }
+
+        public string TopicName { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
+    using Factories;
     using Handlers;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +12,7 @@
         private const string CustomHandlerConsumerStep = "CUSTOM-HANDLER-CONSUMER-MESSAGES";
 
         public CustomConsumerMiddleware(IServiceProvider serviceProvider)
-            :base(nameof(CustomConsumerMiddleware))
+            : base(nameof(CustomConsumerMiddleware))
         {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
@@ -26,12 +27,15 @@
             {
                 try
                 {
-                    await messageHandler.HandleAsync(context, context.CancellationToken);
+                    var consumerContextExecutor = ConsumerContextFactory.GetConsumerContext(context.ContractType);
+                    var consumerContext = consumerContextExecutor.Execute(context);
+
+                    await ConsumerHandlerFactory
+                        .GetExecutor(context.ContractType)
+                        .Execute(messageHandler, consumerContext);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
                 }
             }
         }

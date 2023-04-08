@@ -9,8 +9,16 @@
 
         internal MessageHeaders(Headers headers) => _headers = headers;
 
+        internal MessageHeaders(IReadOnlyDictionary<string, object> applicationProperties)
+        {
+            foreach (var header in applicationProperties)
+            {
+                this.SetString(header.Key, header.Value.ToString());
+            }
+        }
+
         internal static MessageHeaders GetInstance() => new MessageHeaders(new Headers());
-        
+
         public IEnumerator<KeyValuePair<string, byte[]>> GetEnumerator()
         {
             if (_headers == null) yield break;

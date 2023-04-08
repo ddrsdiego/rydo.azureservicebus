@@ -36,20 +36,19 @@
         internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusClientWrapper serviceBusClient,
             SubscriberContext subscriberContext)
         {
-            const int channelCapacity = 2_000;
-
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
             _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             IsRunning = Task.FromResult(true);
-
+            IsStopped = Task.FromResult(false);
+            
             _logger = logger;
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
 
             _cancellationToken = new CancellationToken();
 
-            var channelOptions = new BoundedChannelOptions(channelCapacity)
+            var channelOptions = new BoundedChannelOptions(subscriberContext.Specification.Consumer.BufferSize)
             {
                 AllowSynchronousContinuations = true,
                 FullMode = BoundedChannelFullMode.Wait,
@@ -59,11 +58,11 @@
             BusClient = serviceBusClient;
             _queue = Channel.CreateBounded<ServiceBusReceivedMessage>(channelOptions);
 
-            _readerTask = Task.Run(ReadFromChannel);
+            _readerTask = Task.Run(async () => await ReadFromChannel());
         }
 
         public IServiceBusClientWrapper BusClient { get; }
-        
+
         public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
@@ -77,6 +76,8 @@
         }
 
         public Task<bool> IsRunning { get; set; }
+        
+        public Task<bool> IsStopped { get; set; }
 
         public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
         {
@@ -122,6 +123,7 @@
 
                 await _taskCompletion.Task;
                 await BusClient.DisposeAsync();
+                _readerTask.Dispose();
 
                 IsRunning = _taskCompletion.Task;
 
@@ -146,8 +148,8 @@
                     Identifier = _subscriberContext.Specification.SubscriptionName,
                     ReceiveMode = _subscriberContext.Specification.ReceiveMode
                 };
-                
-                if (!BusClient.Receiver.TryGet(_subscriberContext.TopicSubscriptionName, options,
+
+                if (!BusClient.Receiver.TryGet(_subscriberContext.QueueName, options,
                         out _receiver))
                 {
                 }

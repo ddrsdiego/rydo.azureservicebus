@@ -3,7 +3,7 @@
     using System;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Rydo.AzureServiceBus.Client.Consumers.Subscribers;
+    using Consumers.Subscribers;
     using Logging.Observers;
     using Metrics.Observers;
     using Middlewares.Observers;

@@ -21,7 +21,7 @@
             _lockObject = new object();
             _cache = ImmutableDictionary<string, string>.Empty;
         }
-        
+
         public bool TryExtractTopicName(object model, out string topicName) =>
             InternalTryExtractTopicName(model, out topicName);
 
@@ -48,7 +48,7 @@
                     topicName = string.Empty;
                     return false;
                 }
-                
+
                 if (string.IsNullOrWhiteSpace(topicName))
                 {
                     throw new InvalidTopicNameException(modeFullName);
@@ -60,7 +60,7 @@
             return true;
         }
     }
-    
+
     internal static class ModelExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,12 +87,12 @@
                 return false;
             }
 
-            topicName = attr.ConstructorArguments[TopicAttribute.TopicNamePosition].Value.ToString();
+            topicName = attr.ConstructorArguments[TopicProducerAttribute.TopicNamePosition].Value.ToString();
             return true;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool TryExtractTopicNameFromConsumer(this Type model, out string topicName)
+        internal static bool TryExtractTopicName(this Type model, out string topicName)
         {
             topicName = string.Empty;
 
@@ -115,7 +115,29 @@
                 return false;
             }
 
-            topicName = attr.ConstructorArguments[TopicAttribute.TopicNamePosition].Value.ToString();
+            topicName = attr.ConstructorArguments[TopicConsumerAttribute.TopicNamePosition].Value.ToString();
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static bool TryExtractContractType(this Type model, out Type contractType)
+        {
+            contractType = default;
+
+            if (model == null)
+                return false;
+
+            if (!model.CustomAttributes.Any())
+                return false;
+
+            var attr = model.CustomAttributes
+                .SingleOrDefault(x =>
+                    x.AttributeType.FullName is TopicConsumerAttribute.FullNameTopicConsumerAttribute);
+
+            if (attr == null)
+                return false;
+
+            contractType = (Type)attr.ConstructorArguments[TopicConsumerAttribute.ContractTypeNamePosition].Value;
             return true;
         }
     }

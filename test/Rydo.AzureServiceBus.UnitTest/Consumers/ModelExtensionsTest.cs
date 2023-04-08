@@ -11,7 +11,7 @@
         [Test]
         public void Should_Extract_TopicOrQueueName_From_ConsumerHandler()
         {
-            var res = typeof(AccountCreatedConsumerHandler).TryExtractTopicNameFromConsumer(out var topicOrQueueName);
+            var res = typeof(AccountCreatedConsumerHandler).TryExtractTopicName(out var topicOrQueueName);
             
             res.Should().BeTrue();
             topicOrQueueName.Should().Be(TopicNameConstants.AccountCreated);

@@ -5,9 +5,6 @@
     using System.Text.Json;
     using System.Text.Json.Serialization;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
-    using Microsoft.Extensions.Logging;
-    using Serialization;
 
     internal sealed class ProducerContextContainer : IProducerContextContainer
     {
@@ -48,12 +45,6 @@
             var producerContext =
                 new ProducerContext(producerSpecification, null);
             
-            _services.TryAddSingleton<ISerializer>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<SystemTextJsonSerializer>>();
-                return new SystemTextJsonSerializer(logger, producerConfigurator.Options);
-            });
-
             Entries = Entries.Add(producerContext.ProducerSpecification.TopicName, producerContext);
         }
     }
