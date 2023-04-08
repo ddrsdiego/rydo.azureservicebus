@@ -33,10 +33,7 @@
             for (var index = 0; index < messageRecords.Length; index++)
             {
                 var accountCreated = messageRecords[index].Value;
-
-                // messageRecords[index].MarkToRetry("");
-
-                tasks[index] = Task.Delay(100);
+                tasks[index] = Task.Delay(100, context.CancellationToken);
             }
 
             for (var index = 0; index < tasks.Length; index++)

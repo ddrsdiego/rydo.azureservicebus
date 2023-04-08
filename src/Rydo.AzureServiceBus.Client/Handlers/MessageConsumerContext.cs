@@ -43,21 +43,19 @@
             Queue = subscriberContext.Specification.QueueName;
         }
 
-        public readonly string Topic;
-        public readonly string Subscription;
-        public readonly string Queue;
+        public string ContextId { get; }
+        public string Queue { get; }
+        public string Subscription { get; }
+        public string Topic { get; }
+        public CancellationToken CancellationToken { get; }
 
         internal readonly ServiceBusReceiver Receiver;
         internal readonly SubscriberContext SubscriberContext;
-        internal readonly CancellationToken CancellationToken;
-
         internal void StopMsgContextWatch() => _stopwatchMsgContext.Stop();
         internal void StopMiddlewareWatch() => _stopwatchMiddleware.Stop();
         internal void StarMiddlewareWatch() => _stopwatchMiddleware.Restart();
-
         internal long ElapsedTimeMiddleware => _stopwatchMiddleware.ElapsedMilliseconds;
         internal long ElapsedTimeMessageContext => _stopwatchMsgContext.ElapsedMilliseconds;
-
         internal Type HandlerType => SubscriberContext.HandlerType;
         internal Type ContractType => SubscriberContext.ContractType;
         internal bool AnyFault => FaultsLength > 0;
@@ -110,8 +108,6 @@
                     yield return consumerRecord;
             }
         }
-
-        public string ContextId { get; }
 
         /// <summary>
         /// True if there is at least one message to be processed, false otherwise.

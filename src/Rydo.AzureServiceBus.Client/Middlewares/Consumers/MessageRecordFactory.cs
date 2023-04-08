@@ -27,24 +27,21 @@
         public async ValueTask<MessageRecord> ToMessageRecord(MessageContext messageContext,
             Type contractType, CancellationToken cancellationToken = default)
         {
-            var messageId = messageContext.ReceivedMessage.MessageId;
-            var partitionKey = messageContext.ReceivedMessage.PartitionKey;
-            var rawData = messageContext.ReceivedMessage.Body.ToArray();
-
             MessageRecord messageRecord;
+            var rawData = messageContext.ReceivedMessage.Body.ToArray();
 
             try
             {
                 var messageValue = await _serializer.DeserializeAsync(rawData, contractType, cancellationToken);
                 messageRecord =
-                    MessageRecord.GetInstance(messageId, partitionKey, messageValue);
+                    MessageRecord.GetInstance(messageValue, messageContext.ReceivedMessage);
             }
             catch (Exception e)
             {
                 _logger.LogError("", e);
 
                 messageRecord =
-                    MessageRecord.GetInvalidInstance(messageId, partitionKey);
+                    MessageRecord.GetInvalidInstance(messageContext.ReceivedMessage);
             }
 
             return messageRecord;

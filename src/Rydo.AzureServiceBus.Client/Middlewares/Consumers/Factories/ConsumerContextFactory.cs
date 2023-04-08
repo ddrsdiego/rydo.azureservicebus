@@ -12,13 +12,10 @@
         private static readonly ConcurrentDictionary<Type, Lazy<ConsumerContextFactory>> Executors =
             new ConcurrentDictionary<Type, Lazy<ConsumerContextFactory>>();
 
-        protected ConsumerContextFactory(Type messageType)
-        {
-            MessageType = messageType;
-        }
+        protected ConsumerContextFactory(Type messageType) => MessageType = messageType;
 
         private Type MessageType { get; }
-        
+
         public static ConsumerContextFactory GetConsumerContext(Type messageType)
         {
             var consumerContextFactory = Executors.GetOrAdd(messageType, _ =>
@@ -51,12 +48,10 @@
                     var messageRecord = messageRecordExecutor.Execute(messageRecords[index]);
 
                     var item = (MessageRecord<TMessage>) messageRecord;
-                    item.SetMessageConsumerContext(consumerContext);
-
                     items[index] = item;
                 }
 
-                return new ConsumerContext<TMessage>(consumerContext, items);
+                return new ConsumeContextScope<TMessage>(new ConsumerContext<TMessage>(consumerContext, items));
             }
         }
     }

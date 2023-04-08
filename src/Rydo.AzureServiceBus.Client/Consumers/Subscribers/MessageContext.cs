@@ -1,6 +1,7 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
     using System;
+    using System.Threading.Tasks;
     using Azure.Messaging.ServiceBus;
     using Handlers;
     using Headers;
@@ -20,14 +21,14 @@
     
     public sealed class MessageContext
     {
-        public MessageContext(ServiceBusReceivedMessage receivedMessage)
+        internal MessageContext(ServiceBusReceivedMessage receivedMessage)
         {
             ReceivedMessage = receivedMessage;
             Headers = ReceivedMessage.ExtractHeaders();
         }
 
-        public MessageRecord Record;
-        public readonly IMessageHeaders Headers;
+        internal MessageRecord Record;
+        internal readonly IMessageHeaders Headers;
         internal MessageConsumerContext MessageConsumerContext;
         internal readonly ServiceBusReceivedMessage ReceivedMessage;
 

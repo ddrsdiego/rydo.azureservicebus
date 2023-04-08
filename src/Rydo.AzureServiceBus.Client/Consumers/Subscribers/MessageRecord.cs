@@ -3,66 +3,59 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Text.Json;
+    using Azure.Messaging.ServiceBus;
     using Handlers;
 
     public interface IMessageRecord
     {
+        string MessageId { get; }
+        string PartitionKey { get; }
+        DateTimeOffset SentTime { get; }
     }
 
     public interface IMessageRecord<out TMessage> :
-        IMessageRecord
+        IMessageRecord 
+        where TMessage : class
     {
-        string Key { get; }
-        string PartitionKey { get; }
         TMessage Value { get; }
     }
 
-    public class MessageRecord<TMessage> : 
+    public sealed class MessageRecord<TMessage> :
         IMessageRecord<TMessage>
+        where TMessage : class
     {
-        internal MessageRecord(TMessage value, MessageRecord messageRecord)
+        internal readonly MessageRecord Message;
+
+        internal MessageRecord(TMessage value, MessageRecord message)
         {
-            Key = messageRecord.MessageId;
             Value = value;
-            PartitionKey = messageRecord.PartitionKey;
-            Message = messageRecord;
+            Message = message;
         }
 
-        public string Key { get; }
-        public string PartitionKey { get; }
         public TMessage Value { get; }
-        internal MessageRecord Message { get; }
+        public string MessageId => Message.MessageId;
+        public string PartitionKey => Message.PartitionKey;
+        public DateTimeOffset SentTime => Message.SentTime;
 
-        internal MessageConsumerContext MessageConsumerCtx;
-
-        internal void SetMessageConsumerContext(MessageConsumerContext messageConsumerContext)
-        {
-            MessageConsumerCtx =
-                messageConsumerContext ?? throw new ArgumentNullException(nameof(messageConsumerContext));
-        }
+        internal MessageConsumerContext MessageConsumerCtx => Message.MessageConsumerCtx;
     }
 
-    public class MessageRecord
+    public sealed class MessageRecord : IMessageRecord
     {
-        private MessageRecord(string messageId, string partitionKey, object messageValue, bool isValid)
+        private MessageRecord(object messageValue, bool isValid, ServiceBusReceivedMessage receivedMessage)
         {
             IsValid = isValid;
-            MessageId = messageId;
-            PartitionKey = partitionKey;
+            MessageId = receivedMessage.MessageId;
+            PartitionKey = receivedMessage.PartitionKey;
             MessageValue = messageValue;
+            SentTime = receivedMessage.EnqueuedTime;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public readonly string MessageId;
+        public string MessageId { get; }
+        public string PartitionKey { get; }
+        public DateTimeOffset SentTime { get; }
 
         internal readonly object MessageValue;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public readonly string PartitionKey;
 
         /// <summary>
         /// 
@@ -76,11 +69,11 @@
 
         internal MessageConsumerContext MessageConsumerCtx;
 
-        internal static MessageRecord GetInstance(string messageId, string partitionKey, object messageValue) =>
-            new MessageRecord(messageId, partitionKey, messageValue, true);
+        internal static MessageRecord GetInstance(object messageValue, ServiceBusReceivedMessage receivedMessage) =>
+            new MessageRecord(messageValue, true, receivedMessage);
 
-        internal static MessageRecord GetInvalidInstance(string messageId, string partitionKey) =>
-            new MessageRecord(messageId, partitionKey, null, false);
+        internal static MessageRecord GetInvalidInstance(ServiceBusReceivedMessage receivedMessage) =>
+            new MessageRecord(null, false, receivedMessage);
 
         /// <summary>
         /// Get the raw message contained in the Value field

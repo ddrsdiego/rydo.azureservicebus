@@ -36,8 +36,6 @@
         internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusClientWrapper serviceBusClient,
             SubscriberContext subscriberContext)
         {
-            const int channelCapacity = 2_000;
-
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
             _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 

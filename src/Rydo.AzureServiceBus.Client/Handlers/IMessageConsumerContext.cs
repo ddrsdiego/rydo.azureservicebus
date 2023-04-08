@@ -4,10 +4,9 @@
     using System.Runtime.CompilerServices;
     using Consumers.Subscribers;
 
-    public interface IMessageConsumerContext
+    public interface IMessageConsumerContext :
+        IConsumerContext
     {
-        string ContextId { get; }
-
         /// <summary>
         /// True if there is at least one message to be processed, false otherwise.
         /// </summary>

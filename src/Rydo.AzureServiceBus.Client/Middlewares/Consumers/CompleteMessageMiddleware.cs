@@ -1,7 +1,9 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Middlewares.Consumers
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Client.Consumers.Subscribers;
     using Handlers;
 
     internal sealed class CompleteMessageMiddleware : MessageMiddleware
@@ -17,21 +19,26 @@
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            var completeMessageTasks = new List<Task>(context.Length);
+            var completeMessageTasks = new Dictionary<MessageContext, Task>(context.Length);
+
             foreach (var messageContext in context.MessagesContext)
             {
-                completeMessageTasks.Add(
-                    context.Receiver.CompleteMessageAsync(messageContext.ReceivedMessage, context.CancellationToken));
+                var completeMessageTask =
+                    context.Receiver.CompleteMessageAsync(messageContext.ReceivedMessage, context.CancellationToken);
+
+                completeMessageTasks.Add(messageContext, completeMessageTask);
             }
 
-            var tasks = completeMessageTasks.ToArray();
-            for (var index = 0; index < tasks.Length; index++)
+            foreach (var task in completeMessageTasks)
             {
-                var task = tasks[index];
-
-                if (task.IsCompletedSuccessfully) continue;
-
-                await SlowCompleteMessage(task);
+                try
+                {
+                    if (task.Value.IsCompletedSuccessfully) continue;
+                    await SlowCompleteMessage(task.Value);
+                }
+                catch (Exception e)
+                {
+                }
             }
 
             static async Task SlowCompleteMessage(Task task) => await task;

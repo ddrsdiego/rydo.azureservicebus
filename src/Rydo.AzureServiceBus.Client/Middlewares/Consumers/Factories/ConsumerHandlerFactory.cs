@@ -20,7 +20,7 @@
 
         public abstract Task Execute(object handler, IConsumerContext consumerContext);
 
-        private class InnerConsumerHandlerFactory<TMessage> : ConsumerHandlerFactory
+        private class InnerConsumerHandlerFactory<TMessage> : ConsumerHandlerFactory where TMessage : class
         {
             public override Task Execute(object handler, IConsumerContext consumerContext)
             {

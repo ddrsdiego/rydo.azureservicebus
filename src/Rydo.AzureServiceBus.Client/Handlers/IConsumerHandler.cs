@@ -8,6 +8,7 @@
 
     public interface IConsumerHandler<TMessage> :
         IConsumerHandler
+        where TMessage : class
     {
         Task Consume(IConsumerContext<TMessage> context);
     }

@@ -19,6 +19,7 @@ builder.Services.AddAzureClients(config =>
 builder.Services.AddLogging();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddHostedService<PublisherWorker>();
 builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo {Title = Assembly.GetEntryAssembly()?.GetName().Name}));
 
@@ -39,11 +40,10 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
     const int capacity = 1;
 
     var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountCreated);
-    var tasks = new List<Task>(capacity);
-    for (var index = 1; index <= capacity; index++)
+
+    var tasks = Enumerable.Range(0, capacity).Select(async index =>
     {
         var accountNumber = index.ToString("0000000");
-
         var accountCreatedMessage = new AccountCreated(accountNumber);
 
         var producerName = Assembly.GetExecutingAssembly().GetName().Name?.ToLowerInvariant();
@@ -59,9 +59,9 @@ app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
             PartitionKey = accountCreatedMessage.AccountNumber
         };
 
-        tasks.Add(sender.SendMessageAsync(message));
-    }
-
+        await sender.SendMessageAsync(message);
+    });
+    
     await Task.WhenAll(tasks);
     return Results.Accepted();
 });

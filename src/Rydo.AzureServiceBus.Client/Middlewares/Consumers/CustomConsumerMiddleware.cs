@@ -33,8 +33,6 @@
                     await ConsumerHandlerFactory
                         .GetExecutor(context.ContractType)
                         .Execute(messageHandler, consumerContext);
-                    
-                    // await handlerExecutor.Execute(messageHandler, consumerContext);
                 }
                 catch (Exception e)
                 {
