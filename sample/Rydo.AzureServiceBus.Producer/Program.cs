@@ -35,13 +35,10 @@ app.UseRouting();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Assembly.GetEntryAssembly()?.GetName().Name));
 
-app.MapPost("api/v1/accounts", async (ServiceBusClient serviceBusClient) =>
+app.MapPost("api/v1/accounts/{amount:int}", async (ServiceBusClient serviceBusClient, int amount) =>
 {
-    const int capacity = 1;
-
     var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountCreated);
-
-    var tasks = Enumerable.Range(0, capacity).Select(async index =>
+    var tasks = Enumerable.Range(0, amount).Select(async index =>
     {
         var accountNumber = index.ToString("0000000");
         var accountCreatedMessage = new AccountCreated(accountNumber);

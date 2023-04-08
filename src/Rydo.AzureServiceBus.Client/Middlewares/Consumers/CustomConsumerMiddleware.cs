@@ -4,12 +4,12 @@
     using System.Threading.Tasks;
     using Factories;
     using Handlers;
+    using Logging;
     using Microsoft.Extensions.DependencyInjection;
 
     internal sealed class CustomConsumerMiddleware : MessageMiddleware
     {
         private readonly IServiceProvider _serviceProvider;
-        private const string CustomHandlerConsumerStep = "CUSTOM-HANDLER-CONSUMER-MESSAGES";
 
         public CustomConsumerMiddleware(IServiceProvider serviceProvider)
             : base(nameof(CustomConsumerMiddleware))
@@ -17,7 +17,7 @@
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
-        protected override string ConsumerMessagesStep => CustomHandlerConsumerStep;
+        protected override string ConsumerMessagesStep => LogTypeConstants.CustomHandlerConsumerStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {

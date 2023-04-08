@@ -1,7 +1,6 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
     using System;
-    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Channels;
@@ -21,28 +20,29 @@
     internal sealed class ReceiverListener : IReceiverListener
     {
         private IServiceProvider _serviceProvider;
-        private ServiceBusReceiver _receiver;
         private IMiddlewareExecutor _middlewareExecutor;
 
         private readonly Task _readerTask;
-        private readonly ILogger<ReceiverListener> _logger;
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
-        private readonly Channel<ServiceBusReceivedMessage> _queue;
         private readonly ReceiveObservable _receiveObservable;
-        private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
+        private readonly Channel<ServiceBusMessageContext> _queue;
         private readonly TaskCompletionSource<bool> _taskCompletion;
+        private readonly IServiceBusClientAdmin _serviceBusClientAdmin;
+        private readonly IServiceBusClientReceiver _serviceBusClientReceiver;
+        private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
 
-        internal ReceiverListener(ILogger<ReceiverListener> logger, IServiceBusClientWrapper serviceBusClient,
-            SubscriberContext subscriberContext)
+        internal ReceiverListener(IServiceBusClientWrapper serviceBusClientWrapper, SubscriberContext subscriberContext)
         {
             _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
-            _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            _serviceBusClientAdmin = serviceBusClientWrapper.Admin;
+            _serviceBusClientReceiver = serviceBusClientWrapper.Receiver;
+
+            _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             IsRunning = Task.FromResult(true);
             IsStopped = Task.FromResult(false);
-            
-            _logger = logger;
+
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
 
@@ -55,13 +55,11 @@
                 SingleReader = true,
                 SingleWriter = false
             };
-            BusClient = serviceBusClient;
-            _queue = Channel.CreateBounded<ServiceBusReceivedMessage>(channelOptions);
+
+            _queue = Channel.CreateBounded<ServiceBusMessageContext>(channelOptions);
 
             _readerTask = Task.Run(async () => await ReadFromChannel());
         }
-
-        public IServiceBusClientWrapper BusClient { get; }
 
         public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
         {
@@ -76,7 +74,7 @@
         }
 
         public Task<bool> IsRunning { get; set; }
-        
+
         public Task<bool> IsStopped { get; set; }
 
         public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
@@ -89,6 +87,9 @@
             return _finishConsumerMiddlewareObservable.Connect(observer);
         }
 
+        public Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext, CancellationToken stoppingToken)
+            => _serviceBusClientAdmin.CreateEntitiesIfNotExistAsync(subscriberContext, stoppingToken);
+
         public async Task<bool> StartAsync(CancellationToken stoppingToken)
         {
             await CreateReceiversAsync(stoppingToken);
@@ -98,17 +99,11 @@
                 if (stoppingToken.IsCancellationRequested)
                     break;
 
-                var receivedMessages =
-                    await _receiver.ReceiveMessagesAsync(_subscriberContext.Specification.MaxMessages,
-                        cancellationToken: stoppingToken);
-
-                if (receivedMessages == null || receivedMessages.Count == 0)
-                    continue;
-
-                var messages = receivedMessages.ToArray();
-                for (var index = 0; index < messages.Length; index++)
+                await foreach (var receivedMessages in _serviceBusClientReceiver.StartConsumerAsync(
+                                   cancellationToken: stoppingToken))
                 {
-                    await EnqueueAsync(messages[index], stoppingToken);
+                    if (receivedMessages == null) continue;
+                    await EnqueueAsync(receivedMessages, stoppingToken);
                 }
             }
 
@@ -122,7 +117,8 @@
                 _queue.Writer.Complete();
 
                 await _taskCompletion.Task;
-                await BusClient.DisposeAsync();
+                await _serviceBusClientReceiver.DisposeAsync();
+
                 _readerTask.Dispose();
 
                 IsRunning = _taskCompletion.Task;
@@ -149,10 +145,7 @@
                     ReceiveMode = _subscriberContext.Specification.ReceiveMode
                 };
 
-                if (!BusClient.Receiver.TryGet(_subscriberContext.QueueName, options,
-                        out _receiver))
-                {
-                }
+                _serviceBusClientReceiver.TryCreateReceiver(_subscriberContext.Specification.QueueName, options);
 
                 await _receiveObservable.PostStartReceive(_subscriberContext);
             }
@@ -164,13 +157,9 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal Task EnqueueAsync(ServiceBusReceivedMessage receivedMessage,
-            CancellationToken cancellationToken = default)
+        internal ValueTask EnqueueAsync(ServiceBusMessageContext receivedMessage, CancellationToken cancellationToken)
         {
-            var writeTask = _queue.Writer.WriteAsync(receivedMessage, cancellationToken);
-            return writeTask.IsCompletedSuccessfully ? Task.CompletedTask : SlowWrite(writeTask);
-
-            static async Task SlowWrite(ValueTask task) => await task;
+            return _queue.Writer.WriteAsync(receivedMessage, cancellationToken);
         }
 
         private async Task ReadFromChannel()
@@ -184,7 +173,7 @@
                     var counter = 0;
 
                     var messageConsumerContext =
-                        new MessageConsumerContext(_subscriberContext, _receiver, _cancellationToken);
+                        new MessageConsumerContext(_subscriberContext, _serviceBusClientReceiver, _cancellationToken);
 
                     while (counter < batchCapacity && _queue.Reader.TryRead(out var receivedMessage))
                     {

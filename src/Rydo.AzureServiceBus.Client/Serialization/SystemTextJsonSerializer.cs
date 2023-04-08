@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Text.Encodings.Web;
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
@@ -11,27 +12,42 @@
     {
         private readonly ILogger<SystemTextJsonSerializer> _logger;
         private readonly JsonSerializerOptions _options;
+        private static readonly JsonSerializerOptions Options;
 
-        public SystemTextJsonSerializer(ILogger<SystemTextJsonSerializer> logger, JsonSerializerOptions options)
+        public SystemTextJsonSerializer(ILogger<SystemTextJsonSerializer> logger,
+            JsonSerializerOptions options = default)
         {
             _logger = logger;
-            _options = options;
+            _options = options ?? Options;
+        }
+
+        static SystemTextJsonSerializer()
+        {
+            Options = new JsonSerializerOptions
+            {
+                AllowTrailingCommas = true,
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                ReadCommentHandling = JsonCommentHandling.Skip,
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            };
         }
 
         public byte[] Serialize<T>(T obj)
         {
-            return JsonSerializer.SerializeToUtf8Bytes(obj, _options);
+            return JsonSerializer.SerializeToUtf8Bytes(obj, Options);
         }
 
         public T Deserialize<T>(byte[] data)
         {
-            return JsonSerializer.Deserialize<T>(data, _options);
+            return JsonSerializer.Deserialize<T>(data, Options);
         }
 
         public async ValueTask<byte[]> SerializeAsync<T>(T obj, CancellationToken cancellationToken = default)
         {
             using var stream = new MemoryStream();
-            await JsonSerializer.SerializeAsync(stream, obj, _options, cancellationToken);
+            await JsonSerializer.SerializeAsync(stream, obj, Options, cancellationToken);
 
             return stream.ToArray();
         }

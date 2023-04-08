@@ -21,7 +21,7 @@ namespace Rydo.AzureServiceBus.Consumer.ConsumerHandlers
     {
         public Task Consume(IConsumerContext<AccountUpdated> context)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
         private readonly IServiceBusHostSettings _hostSettings;
         private readonly AdminClientClientObservable _adminClientClientObservable;
 
-        public ServiceBusClientAdmin(IServiceBusHostSettings hostSettings)
+        internal ServiceBusClientAdmin(IServiceBusHostSettings hostSettings)
         {
             _hostSettings = hostSettings;
             _adminClientClientObservable = new AdminClientClientObservable();
@@ -45,12 +45,11 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
             try
             {
                 await _adminClientClientObservable.PreConsumerAsync(subscriberContext);
-                
 
                 var subscriptionOptions = new CreateSubscriptionOptions(subscriberContext.Specification.TopicName,
                     subscriberContext.Specification.SubscriptionName)
                 {
-                    ForwardTo = subscriberContext.QueueName,
+                    ForwardTo = subscriberContext.Specification.QueueName,
                     LockDuration = subscriberContext.Specification.LockDurationInSeconds,
                     MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
                 };
@@ -85,7 +84,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
         {
             try
             {
-                var queueOptions = new CreateQueueOptions(subscriberContext.QueueName)
+                var queueOptions = new CreateQueueOptions(subscriberContext.Specification.QueueName)
                 {
                     LockDuration = subscriberContext.Specification.LockDurationInSeconds,
                     MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
@@ -95,7 +94,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
                 await _adminClientClientObservable.VerifyQueueExitsAsync(queueOptions);
 
                 var queueExists =
-                    await _hostSettings.AdminClient.QueueExistsAsync(subscriberContext.QueueName,
+                    await _hostSettings.AdminClient.QueueExistsAsync(subscriberContext.Specification.QueueName,
                         cancellationToken);
 
                 if (!queueExists.Value)

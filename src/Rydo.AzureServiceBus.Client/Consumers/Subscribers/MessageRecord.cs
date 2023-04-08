@@ -3,7 +3,6 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Text.Json;
-    using Azure.Messaging.ServiceBus;
     using Handlers;
 
     public interface IMessageRecord
@@ -14,7 +13,7 @@
     }
 
     public interface IMessageRecord<out TMessage> :
-        IMessageRecord 
+        IMessageRecord
         where TMessage : class
     {
         TMessage Value { get; }
@@ -36,19 +35,18 @@
         public string MessageId => Message.MessageId;
         public string PartitionKey => Message.PartitionKey;
         public DateTimeOffset SentTime => Message.SentTime;
-
-        internal MessageConsumerContext MessageConsumerCtx => Message.MessageConsumerCtx;
     }
 
-    public sealed class MessageRecord : IMessageRecord
+    public sealed class MessageRecord :
+        IMessageRecord
     {
-        private MessageRecord(object messageValue, bool isValid, ServiceBusReceivedMessage receivedMessage)
+        private MessageRecord(object messageValue, bool isValid, IServiceBusMessageContext serviceBusMessageContext)
         {
             IsValid = isValid;
-            MessageId = receivedMessage.MessageId;
-            PartitionKey = receivedMessage.PartitionKey;
             MessageValue = messageValue;
-            SentTime = receivedMessage.EnqueuedTime;
+            MessageId = serviceBusMessageContext.MessageId;
+            PartitionKey = serviceBusMessageContext.PartitionKey;
+            SentTime = serviceBusMessageContext.EnqueuedTime;
         }
 
         public string MessageId { get; }
@@ -69,11 +67,12 @@
 
         internal MessageConsumerContext MessageConsumerCtx;
 
-        internal static MessageRecord GetInstance(object messageValue, ServiceBusReceivedMessage receivedMessage) =>
-            new MessageRecord(messageValue, true, receivedMessage);
+        internal static MessageRecord GetInstance(object messageValue,
+            IServiceBusMessageContext serviceBusMessageContext) =>
+            new MessageRecord(messageValue, true, serviceBusMessageContext);
 
-        internal static MessageRecord GetInvalidInstance(ServiceBusReceivedMessage receivedMessage) =>
-            new MessageRecord(null, false, receivedMessage);
+        internal static MessageRecord GetInvalidInstance(IServiceBusMessageContext serviceBusMessageContext) =>
+            new MessageRecord(null, false, serviceBusMessageContext);
 
         /// <summary>
         /// Get the raw message contained in the Value field

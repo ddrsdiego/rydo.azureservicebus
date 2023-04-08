@@ -2,6 +2,7 @@
 {
     using System.Threading.Tasks;
     using Handlers;
+    using Logging;
 
     internal sealed class DeadLetterHandleMiddleware : MessageMiddleware
     {
@@ -10,9 +11,7 @@
         {
         }
 
-        private const string DeadLetterConsumerStep = "DEAD-LETTER-CONSUMER-MESSAGES";
-
-        protected override string ConsumerMessagesStep => DeadLetterConsumerStep;
+        protected override string ConsumerMessagesStep => LogTypeConstants.DeadLetterConsumerStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {

@@ -15,7 +15,7 @@
 
         public Task PreConsumerAsync(string middlewareType, string step, MessageConsumerContext context)
         {
-            var stepFormat = $"{step}-INIT";
+            var stepFormat = $"{step}-init";
 
             context.StarMiddlewareWatch();
 
@@ -32,7 +32,7 @@
         {
             context.StopMiddlewareWatch();
 
-            var stepFormat = $"{step}-END";
+            var stepFormat = $"{step}-end";
 
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogInformation(
@@ -54,7 +54,7 @@
         {
             return new MessageConsumerContextAuditMedata
             {
-                Step = step,
+                Step = step.ToLowerInvariant(),
                 Queue = context.Queue,
                 Topic = context.Topic,
                 Subscription = context.Subscription,

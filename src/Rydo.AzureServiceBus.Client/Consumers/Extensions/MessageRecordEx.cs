@@ -21,7 +21,7 @@
         public static void MarkToRetry<TMessage>(this MessageRecord<TMessage> messageRecord, string reason,
             Exception exception) where TMessage : class
         {
-            messageRecord.MessageConsumerCtx.MarkToRetry(messageRecord.Message, reason, exception);
+            messageRecord.Message.MessageConsumerCtx.MarkToRetry(messageRecord.Message, reason, exception);
         }
     }
 }

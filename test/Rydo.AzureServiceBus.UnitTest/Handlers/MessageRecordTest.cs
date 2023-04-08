@@ -1,6 +1,8 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Handlers
 {
     using System;
+    using System.Threading.Tasks;
+    using Azure.Messaging.ServiceBus;
     using NUnit.Framework;
 
     public class MessageRecordTest
@@ -8,17 +10,34 @@
         [Test]
         public void Test()
         {
-            // var messageRecord = new MessageRecord()
+            // ServiceBusReceivedMessage
+            // var messageRecord = new MessageRecord();
         }
     }
 
-    public interface IReceivedMessage
+    public interface IReceiveContext
     {
-        string MessageId { get; }
-        string PartitionKey { get; }
-        string SessionId { get; }
-        TimeSpan TimeToLive { get; }
-        DateTimeOffset ExpiresAt { get; }
-        DateTimeOffset EnqueuedTime { get; }
+    }
+
+    public interface IServiceBusReceiveContext :
+        IReceiveContext
+    {
+        Task CompleteMessageAsync();
+    }
+
+    public class ServiceBusReceiveContext :
+        IServiceBusReceiveContext
+    {
+        private readonly ServiceBusReceiver _receiver;
+
+        public ServiceBusReceiveContext(ServiceBusReceiver receiver)
+        {
+            _receiver = receiver;
+        }
+
+        public Task CompleteMessageAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

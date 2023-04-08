@@ -12,8 +12,8 @@
 
     internal static class SubscriberContextContainerEx
     {
-        public static ISubscriberContextContainer TryResolveSubscriberContextContainer(this IServiceProvider sp,
-            IServiceBusClientConfigurator configurator)
+        public static ISubscriberContextContainer TryResolveSubscriberContextContainer(
+            this IServiceBusClientConfigurator configurator, IServiceProvider sp)
         {
             foreach (var (topicName, consumerContext) in configurator.Receiver.ReceiverContextContainer.Subscriber
                          .Contexts)
@@ -25,22 +25,22 @@
             return configurator.Receiver.ReceiverContextContainer.Subscriber;
         }
 
-        private static ReceiverListener CreateReceiverListener(IServiceProvider sp, SubscriberContext subscriberContext)
+        private static IReceiverListener CreateReceiverListener(IServiceProvider serviceProvider,
+            SubscriberContext subscriberContext)
         {
-            var logger = sp.GetRequiredService<ILoggerFactory>();
-            var receiverListenerLogger = sp.GetRequiredService<ILogger<ReceiverListener>>();
-            var serviceBusClient = sp.GetRequiredService<ServiceBusClient>();
-            var serviceBusAdministrationClient = sp.GetRequiredService<ServiceBusAdministrationClient>();
+            var logger = serviceProvider.GetRequiredService<ILoggerFactory>();
+            var serviceBusClient = serviceProvider.GetRequiredService<ServiceBusClient>();
+            var serviceBusAdministrationClient = serviceProvider.GetRequiredService<ServiceBusAdministrationClient>();
 
             var hostSettings =
-                new ServiceBusHostSettings("", serviceBusClient, serviceBusAdministrationClient);
+                new ServiceBusHostSettings(serviceBusClient, serviceBusAdministrationClient);
 
-            var client = new ServiceBusClientWrapper(hostSettings);
-            client.Admin.ConnectAdminClientObservers(new LogAdminClientObserver(logger));
-            
-            var receiverListener = new ReceiverListener(receiverListenerLogger, client, subscriberContext);
-            receiverListener.ConnectObservers(sp);
-            
+            var serviceBusClientWrapper = new ServiceBusClientWrapper(hostSettings);
+            serviceBusClientWrapper.Admin.ConnectAdminClientObservers(new LogAdminClientObserver(logger));
+
+            var receiverListener = new ReceiverListener(serviceBusClientWrapper, subscriberContext);
+            receiverListener.ConnectObservers(serviceProvider);
+
             return receiverListener;
         }
     }

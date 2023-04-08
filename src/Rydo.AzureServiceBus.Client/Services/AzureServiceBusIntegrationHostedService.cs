@@ -32,7 +32,7 @@
                 if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
                     continue;
 
-                await receiverListener.BusClient.Admin.CreateEntitiesIfNotExistAsync(consumerContext, _source.Token);
+                await receiverListener.CreateEntitiesIfNotExistAsync(consumerContext, _source.Token);
             }
 
             await base.StartAsync(cancellationToken);

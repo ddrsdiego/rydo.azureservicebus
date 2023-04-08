@@ -5,8 +5,6 @@
 
     public interface IServiceBusHostSettings
     {
-        string ConnectionString { get; }
-
         /// <summary>
         /// A custom client that will be used instead of one defined by the settings provided here.
         /// </summary>

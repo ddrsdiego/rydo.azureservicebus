@@ -4,11 +4,10 @@
     using System.Threading.Tasks;
     using Client.Consumers.Subscribers;
     using Handlers;
+    using Logging;
 
     internal sealed class DeserializerConsumerMiddleware : MessageMiddleware
     {
-        private const string DeserializerConsumerMessagesStep = "DESERIALIZER-CONSUMER-MESSAGES";
-        
         private readonly IMessageRecordFactory _messageRecordFactory;
         
         public DeserializerConsumerMiddleware(IMessageRecordFactory messageRecordFactory)
@@ -17,7 +16,7 @@
             _messageRecordFactory = messageRecordFactory;
         }
 
-        protected override string ConsumerMessagesStep => DeserializerConsumerMessagesStep;
+        protected override string ConsumerMessagesStep => LogTypeConstants.DeserializerConsumerMessagesStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {

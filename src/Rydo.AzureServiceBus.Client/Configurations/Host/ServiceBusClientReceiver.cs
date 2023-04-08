@@ -2,90 +2,76 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.ServiceBus;
+    using Consumers.Subscribers;
 
     public interface IServiceBusClientReceiver : IAsyncDisposable
     {
-        Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesAsync(int maxMessages,
-            CancellationToken cancellationToken = default);
+        void TryCreateReceiver(string queueName, ServiceBusReceiverOptions options);
         
-        bool TryGet(string queueName, ServiceBusReceiverOptions options, out ServiceBusReceiver receiver);
+        Task CompleteMessageAsync(ServiceBusMessageContext serviceBusMessageContext,
+            CancellationToken cancellationToken = default);
+
+        IAsyncEnumerable<ServiceBusMessageContext> StartConsumerAsync(CancellationToken cancellationToken);
     }
 
-    internal sealed class ServiceBusClientReceiverContainer
-    {
-        private readonly object _lockObject;
-        private ImmutableDictionary<string, IServiceBusClientReceiver> _receivers;
-
-        public ServiceBusClientReceiverContainer()
-        {
-            _lockObject = new object();
-            _receivers = ImmutableDictionary<string, IServiceBusClientReceiver>.Empty;
-        }
-    }
-    
-    
     internal sealed class ServiceBusClientReceiver : IServiceBusClientReceiver
     {
         private readonly object _lockObject;
         private readonly IServiceBusHostSettings _hostSettings;
-        private ImmutableDictionary<string, ServiceBusReceiver> _receivers;
-
-        public ServiceBusClientReceiver(IServiceBusHostSettings hostSettings)
+        
+        private ServiceBusReceiver _serviceBusReceiver;
+        
+        internal ServiceBusClientReceiver(IServiceBusHostSettings hostSettings)
         {
             _hostSettings = hostSettings ?? throw new ArgumentNullException(nameof(hostSettings));
             _lockObject = new object();
-            _receivers = ImmutableDictionary<string, ServiceBusReceiver>.Empty;
         }
 
-        public Task<IReadOnlyList<ServiceBusReceivedMessage>> ReceiveMessagesAsync(int maxMessages, CancellationToken cancellationToken = default)
+        public Task CompleteMessageAsync(ServiceBusMessageContext serviceBusMessageContext,
+            CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return _serviceBusReceiver.CompleteMessageAsync(serviceBusMessageContext.Message, cancellationToken);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGet(string queueName, ServiceBusReceiverOptions options, out ServiceBusReceiver receiver)
+        public void TryCreateReceiver(string queueName, ServiceBusReceiverOptions options)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            EnsureReceiver(queueName, options);
+        }
 
-            if (string.IsNullOrEmpty(queueName)) throw new ArgumentNullException(nameof(queueName));
-            
-            receiver = default;
+        public async IAsyncEnumerable<ServiceBusMessageContext> StartConsumerAsync(
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await foreach (var serviceBusReceivedMessage in _serviceBusReceiver.ReceiveMessagesAsync(cancellationToken))
+            {
+                if (serviceBusReceivedMessage == null) continue;
+                yield return new ServiceBusMessageContext(serviceBusReceivedMessage);
+            }
+        }
+
+        private void EnsureReceiver(string queueName, ServiceBusReceiverOptions options)
+        {
+            if (_serviceBusReceiver != null)
+                return;
 
             lock (_lockObject)
             {
-                if (_receivers.TryGetValue(queueName, out receiver))
-                    return true;
+                _serviceBusReceiver = _hostSettings.ServiceBusClient.CreateReceiver(queueName, options);
             }
-
-            lock (_lockObject)
-            {
-                receiver = _hostSettings.ServiceBusClient.CreateReceiver(queueName, options);
-                _receivers = _receivers.Add(queueName, receiver);
-            }
-
-            return true;
         }
 
         public async ValueTask DisposeAsync()
         {
             lock (_lockObject)
             {
-                if (_receivers.IsEmpty)
+                if (_serviceBusReceiver == null || _serviceBusReceiver.IsClosed)
                     return;
             }
 
-            foreach (var (topicName, serviceBusReceiver) in _receivers)
-            {
-                if (serviceBusReceiver.IsClosed)
-                    continue;
-
-                await serviceBusReceiver.DisposeAsync();
-            }
+            await _serviceBusReceiver.DisposeAsync();
         }
     }
 }

@@ -28,20 +28,20 @@
             Type contractType, CancellationToken cancellationToken = default)
         {
             MessageRecord messageRecord;
-            var rawData = messageContext.ReceivedMessage.Body.ToArray();
+            var rawData = messageContext.ServiceBusMessageContext.Body.ToArray();
 
             try
             {
                 var messageValue = await _serializer.DeserializeAsync(rawData, contractType, cancellationToken);
                 messageRecord =
-                    MessageRecord.GetInstance(messageValue, messageContext.ReceivedMessage);
+                    MessageRecord.GetInstance(messageValue, messageContext.ServiceBusMessageContext);
             }
             catch (Exception e)
             {
                 _logger.LogError("", e);
 
                 messageRecord =
-                    MessageRecord.GetInvalidInstance(messageContext.ReceivedMessage);
+                    MessageRecord.GetInvalidInstance(messageContext.ServiceBusMessageContext);
             }
 
             return messageRecord;

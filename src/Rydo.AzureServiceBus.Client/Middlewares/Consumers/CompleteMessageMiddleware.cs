@@ -5,17 +5,16 @@
     using System.Threading.Tasks;
     using Client.Consumers.Subscribers;
     using Handlers;
+    using Logging;
 
     internal sealed class CompleteMessageMiddleware : MessageMiddleware
     {
-        private const string CompleteMessageStep = "COMPLETE-CONSUMER-MESSAGE";
-
         public CompleteMessageMiddleware()
             : base(nameof(CompleteMessageMiddleware))
         {
         }
 
-        protected override string ConsumerMessagesStep => CompleteMessageStep;
+        protected override string ConsumerMessagesStep => LogTypeConstants.CompleteMessageStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
@@ -24,7 +23,7 @@
             foreach (var messageContext in context.MessagesContext)
             {
                 var completeMessageTask =
-                    context.Receiver.CompleteMessageAsync(messageContext.ReceivedMessage, context.CancellationToken);
+                    context.Receiver.CompleteMessageAsync(messageContext.ServiceBusMessageContext, context.CancellationToken);
 
                 completeMessageTasks.Add(messageContext, completeMessageTask);
             }
