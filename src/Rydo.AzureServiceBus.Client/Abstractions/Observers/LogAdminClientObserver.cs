@@ -8,7 +8,7 @@
 
     internal sealed class LogAdminClientObserver : IAdminClientObserver
     {
-        private ILogger<LogAdminClientObserver> _logger;
+        private readonly ILogger<LogAdminClientObserver> _logger;
 
         public LogAdminClientObserver(ILoggerFactory loggerFactory) => _logger = loggerFactory.CreateLogger<LogAdminClientObserver>();
 
@@ -16,7 +16,7 @@
         {
             _logger.LogInformation(
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
-                "VERIFY-QUEUE-EXISTS",
+                LogTypeConstants.VerifyQueueExists,
                 queueOptions);
 
             return Task.CompletedTask;

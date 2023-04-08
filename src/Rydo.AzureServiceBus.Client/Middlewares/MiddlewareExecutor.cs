@@ -45,7 +45,7 @@
                 return nextOperation(context);
 
             if (_middlewareConfigurationContainer != null && _middlewareConfigurationContainer.Configs.Count > index)
-                configuration = _middlewareConfigurationContainer?.Configs[index];
+                configuration = _middlewareConfigurationContainer.Configs[index];
 
             if (index == _middlewareConfigurationContainer?.Configs.Count)
                 configuration = _middlewareConfigurationContainer?.FinallyProcess;

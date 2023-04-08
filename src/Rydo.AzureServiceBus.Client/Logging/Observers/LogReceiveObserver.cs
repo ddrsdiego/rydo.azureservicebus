@@ -10,11 +10,6 @@
 
     internal sealed class LogReceiveObserver : IReceiveObserver
     {
-        private const string StartReceiverLogType = "START-RECEIVER";
-        private const string FaultStartReceiverLogType = "FAULT_START-RECEIVER";
-        private const string ConnectedReceiverLogType = "CONNECTED-RECEIVER";
-        private const string IncomingMessageReceiverLogType = "INCOMING-MESSAGE";
-
         private readonly ILogger<LogReceiveObserver> _logger;
 
         public LogReceiveObserver(ILoggerFactory logger) => _logger = logger.CreateLogger<LogReceiveObserver>();
@@ -22,7 +17,7 @@
         public Task PreStartReceive(SubscriberContext context)
         {
             _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
-                StartReceiverLogType,
+                LogTypeConstants.StartReceiver,
                 new SubscriberContextLog(context));
 
             return Task.CompletedTask;
@@ -33,7 +28,7 @@
             var log = new SubscriberContextLog(context);
 
             _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
-                ConnectedReceiverLogType,
+                LogTypeConstants.ConnectedReceiver,
                 log);
 
             return Task.CompletedTask;
@@ -45,7 +40,7 @@
 
             _logger.LogError(exception,
                 $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
-                ConnectedReceiverLogType,
+                LogTypeConstants.ConnectedReceiver,
                 log);
 
             return Task.CompletedTask;
@@ -54,7 +49,7 @@
         public Task PreReceiveAsync(MessageContext context)
         {
             _logger.LogDebug($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageContextLog}",
-                IncomingMessageReceiverLogType,
+                LogTypeConstants.IncomingMessageReceiver,
                 MessageContextLog.GetInstance(context));
 
             return Task.CompletedTask;
@@ -70,9 +65,9 @@
         public static MessageContextLog GetInstance(MessageContext context) => new MessageContextLog(context);
 
         public string ContextId => _context.MessageConsumerContext.ContextId;
-        public string MessageId => _context.ReceivedMessage.MessageId;
-        public string ContentType => _context.ReceivedMessage.ContentType;
-        public string PartitionKey => _context.ReceivedMessage.PartitionKey;
+        public string MessageId => _context.ServiceBusMessageContext.MessageId;
+        public string ContentType => _context.ServiceBusMessageContext.ContentType;
+        public string PartitionKey => _context.ServiceBusMessageContext.PartitionKey;
         public string Topic => _context.MessageConsumerContext.SubscriberContext.Specification.TopicName;
         public string Subscription => _context.MessageConsumerContext.SubscriberContext.Specification.SubscriptionName;
         public string Queue => _context.MessageConsumerContext.SubscriberContext.Specification.QueueName;
@@ -89,7 +84,7 @@
         public string SubscriptionName => _context.Specification.SubscriptionName;
         public string Handler => _context.HandlerType.Name;
         public string Contract => _context.ContractType.Name;
-        public string QueueSubscription => _context.QueueName;
+        public string QueueSubscription => _context.Specification.QueueName;
         public int PrefetchCount => _context.Specification.PrefetchCount;
         public int MaxMessages => _context.Specification.MaxMessages;
         public int MaxDeliveryCount => _context.Specification.MaxDeliveryCount;

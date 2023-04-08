@@ -70,7 +70,7 @@
 
             var consumerSpecification = new SubscriberSpecification(consumerConfigurator);
             var context = new SubscriberContext(consumerSpecification, contractType, _consumerHandler);
-            Contexts = Contexts.Add(context.QueueName, context);
+            Contexts = Contexts.Add(context.Specification.QueueName, context);
         }
 
         public ImmutableDictionary<string, SubscriberContext> Contexts { get; private set; }

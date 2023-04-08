@@ -5,7 +5,7 @@
     using System.Diagnostics;
     using System.Runtime.CompilerServices;
     using System.Threading;
-    using Azure.Messaging.ServiceBus;
+    using Configurations.Host;
     using Consumers.Subscribers;
     using Utils;
 
@@ -21,7 +21,7 @@
         private LinkedList<MessageRecord> _messagesRecordToRetry;
         private readonly LinkedList<MessageContext> _messageContexts;
 
-        internal MessageConsumerContext(SubscriberContext subscriberContext, ServiceBusReceiver receiver,
+        internal MessageConsumerContext(SubscriberContext subscriberContext, IServiceBusClientReceiver receiver,
             CancellationToken cancellationToken)
         {
             _syncLock = new object();
@@ -34,9 +34,11 @@
             Length = 0;
             FaultsLength = 0;
             ContextId = GeneratorOperationId.Generate();
+            
             CancellationToken = cancellationToken;
             SubscriberContext = subscriberContext;
             Receiver = receiver;
+            // Receiver = serviceBusClientReceiver.Receiver;
 
             Topic = subscriberContext.Specification.TopicName;
             Subscription = subscriberContext.Specification.SubscriptionName;
@@ -47,9 +49,10 @@
         public string Queue { get; }
         public string Subscription { get; }
         public string Topic { get; }
+        public IServiceBusClientReceiver Receiver { get; }
         public CancellationToken CancellationToken { get; }
 
-        internal readonly ServiceBusReceiver Receiver;
+        // internal readonly ServiceBusReceiver Receiver;
         internal readonly SubscriberContext SubscriberContext;
         internal void StopMsgContextWatch() => _stopwatchMsgContext.Stop();
         internal void StopMiddlewareWatch() => _stopwatchMiddleware.Stop();

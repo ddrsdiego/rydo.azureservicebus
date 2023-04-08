@@ -5,15 +5,12 @@
 
     internal sealed class ServiceBusHostSettings : IServiceBusHostSettings
     {
-        public ServiceBusHostSettings(string connectionString, ServiceBusClient serviceBusClient,
-            ServiceBusAdministrationClient adminClient)
+        internal ServiceBusHostSettings(ServiceBusClient serviceBusClient, ServiceBusAdministrationClient adminClient)
         {
-            ConnectionString = connectionString;
-            ServiceBusClient = serviceBusClient;
             AdminClient = adminClient;
+            ServiceBusClient = serviceBusClient;
         }
 
-        public string ConnectionString { get; }
         public ServiceBusClient ServiceBusClient { get; }
         public ServiceBusAdministrationClient AdminClient { get; }
     }
