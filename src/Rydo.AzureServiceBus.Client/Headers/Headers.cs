@@ -4,7 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
 
-    internal sealed class Headers : IEnumerable<IHeader>, IEnumerable
+    public sealed class Headers : IEnumerable<IHeader>
     {
         private readonly List<IHeader> _headers = new List<IHeader>();
 
@@ -86,7 +86,7 @@
         /// <returns>
         ///     An enumerator object that can be used to iterate through the headers collection.
         /// </returns>
-        public IEnumerator<IHeader> GetEnumerator() => (IEnumerator<IHeader>) new HeadersEnumerator(this);
+        public IEnumerator<IHeader> GetEnumerator() => new HeadersEnumerator(this);
 
         /// <summary>
         ///     Returns an enumerator that iterates through the headers collection.
@@ -105,7 +105,7 @@
         /// <summary>The number of headers in the collection.</summary>
         public int Count => _headers.Count;
 
-        internal class HeadersEnumerator : IEnumerator<IHeader>, IEnumerator, IDisposable
+        internal class HeadersEnumerator : IEnumerator<IHeader>, IDisposable
         {
             private readonly Headers _headers;
             private int _location = -1;

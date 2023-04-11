@@ -27,8 +27,9 @@
             {
                 try
                 {
-                    var consumerContextExecutor = ConsumerContextFactory.GetConsumerContext(context.ContractType);
-                    var consumerContext = consumerContextExecutor.Execute(context);
+                    var consumerContext = ConsumerContextFactory
+                        .GetConsumerContext(context.ContractType)
+                        .Execute(context);
 
                     await ConsumerHandlerFactory
                         .GetExecutor(context.ContractType)

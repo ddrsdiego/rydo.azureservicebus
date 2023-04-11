@@ -3,9 +3,11 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using Configurations.Host;
+    using Consumers.MessageRecordModel;
     using Consumers.Subscribers;
     using Utils;
 
@@ -19,7 +21,7 @@
         private readonly Stopwatch _stopwatchMiddleware;
         private readonly Stopwatch _stopwatchMsgContext;
         private LinkedList<MessageRecord> _messagesRecordToRetry;
-        private readonly LinkedList<MessageContext> _messageContexts;
+        private readonly LinkedList<IMessageContext> _messageContexts;
 
         internal MessageConsumerContext(SubscriberContext subscriberContext, IServiceBusClientReceiver receiver,
             CancellationToken cancellationToken)
@@ -29,16 +31,15 @@
             _stopwatchMsgContext = Stopwatch.StartNew();
 
             _stopwatchMiddleware = new Stopwatch();
-            _messageContexts = new LinkedList<MessageContext>();
+            _messageContexts = new LinkedList<IMessageContext>();
 
             Length = 0;
             FaultsLength = 0;
             ContextId = GeneratorOperationId.Generate();
-            
+
             CancellationToken = cancellationToken;
             SubscriberContext = subscriberContext;
             Receiver = receiver;
-            // Receiver = serviceBusClientReceiver.Receiver;
 
             Topic = subscriberContext.Specification.TopicName;
             Subscription = subscriberContext.Specification.SubscriptionName;
@@ -52,7 +53,6 @@
         public IServiceBusClientReceiver Receiver { get; }
         public CancellationToken CancellationToken { get; }
 
-        // internal readonly ServiceBusReceiver Receiver;
         internal readonly SubscriberContext SubscriberContext;
         internal void StopMsgContextWatch() => _stopwatchMsgContext.Stop();
         internal void StopMiddlewareWatch() => _stopwatchMiddleware.Stop();
@@ -67,10 +67,12 @@
         internal void Add(MessageContext messageContext)
         {
             var id = Interlocked.Increment(ref _length);
+            
             lock (_syncLock)
             {
                 messageContext.SetMessageConsumerContext(this);
                 _messageContexts.AddLast(messageContext);
+                
                 Length = id;
             }
         }
@@ -92,15 +94,7 @@
             }
         }
 
-        internal IEnumerable<MessageContext> MessagesContext
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                foreach (var messageContext in _messageContexts)
-                    yield return messageContext;
-            }
-        }
+        internal IMessageContext[] MessagesContext => _messageContexts.ToArray();
 
         internal IEnumerable<MessageRecord> Faults
         {
@@ -121,21 +115,5 @@
         /// Number of messages within the context to be processed.
         /// </summary>
         public int Length { get; private set; }
-
-        /// <summary>
-        /// List of messages to be processed. The Length and AnyMessage properties indicate if there are messages in the list.
-        /// </summary>
-        public IEnumerable<MessageRecord> Messages
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                foreach (var messageContext in _messageContexts)
-                {
-                    if (messageContext.Record.IsInvalid) continue;
-                    yield return messageContext.Record;
-                }
-            }
-        }
     }
 }

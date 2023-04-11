@@ -5,7 +5,7 @@
     using System.Threading.Tasks;
     using Handlers;
 
-    public abstract class ConsumerHandlerFactory
+    internal abstract class ConsumerHandlerFactory
     {
         private static readonly ConcurrentDictionary<Type, ConsumerHandlerFactory> Executors =
             new ConcurrentDictionary<Type, ConsumerHandlerFactory>();
@@ -24,8 +24,8 @@
         {
             public override Task Execute(object handler, IConsumerContext consumerContext)
             {
-                var typedConsumerHandler = (IConsumerHandler<TMessage>) handler;
-                var typedConsumerContext = (IConsumerContext<TMessage>) consumerContext;
+                var typedConsumerHandler =  handler as IConsumerHandler<TMessage>;
+                var typedConsumerContext =  consumerContext as IConsumerContext<TMessage>;
 
                 return typedConsumerHandler.Consume(typedConsumerContext);
             }

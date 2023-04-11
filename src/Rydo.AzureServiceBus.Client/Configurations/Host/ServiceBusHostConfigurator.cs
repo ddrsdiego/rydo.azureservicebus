@@ -1,6 +1,6 @@
 namespace Rydo.AzureServiceBus.Client.Configurations.Host
 {
-    using Azure.Messaging.ServiceBus;
+    using System;
     using Azure.Messaging.ServiceBus.Administration;
     using Microsoft.Extensions.Azure;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,10 +17,21 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
 
         public void Configure(string connectionString)
         {
-            var properties = ServiceBusConnectionStringProperties.Parse(connectionString);
+            // var properties = ServiceBusConnectionStringProperties.Parse(connectionString);
 
             _services.AddAzureClients(config => config.AddServiceBusClient(connectionString));
             _services.TryAddSingleton(sp => new ServiceBusAdministrationClient(connectionString));
+        }
+    }
+    
+    internal static class AzureServiceBusEndpointUriCreator
+    {
+        public static Uri Create(string serviceBusNamespace, string entityPath = null,
+            string azureEndPoint = "servicebus.windows.net")
+        {
+            var endpoint = $"sb://{serviceBusNamespace}.{azureEndPoint}/{entityPath}";
+
+            return new Uri(endpoint);
         }
     }
 }

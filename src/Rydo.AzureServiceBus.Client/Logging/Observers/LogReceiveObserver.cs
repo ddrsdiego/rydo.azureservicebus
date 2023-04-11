@@ -16,7 +16,7 @@
 
         public Task PreStartReceive(SubscriberContext context)
         {
-            _logger.LogInformation($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
+            _logger.LogDebug($"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.SubscriberContextLog}",
                 LogTypeConstants.StartReceiver,
                 new SubscriberContextLog(context));
 
@@ -65,9 +65,9 @@
         public static MessageContextLog GetInstance(MessageContext context) => new MessageContextLog(context);
 
         public string ContextId => _context.MessageConsumerContext.ContextId;
-        public string MessageId => _context.ServiceBusMessageContext.MessageId;
-        public string ContentType => _context.ServiceBusMessageContext.ContentType;
-        public string PartitionKey => _context.ServiceBusMessageContext.PartitionKey;
+        public string MessageId => _context.Message.MessageId;
+        public string ContentType => _context.Message.ContentType;
+        public string PartitionKey => _context.Message.PartitionKey;
         public string Topic => _context.MessageConsumerContext.SubscriberContext.Specification.TopicName;
         public string Subscription => _context.MessageConsumerContext.SubscriberContext.Specification.SubscriptionName;
         public string Queue => _context.MessageConsumerContext.SubscriberContext.Specification.QueueName;

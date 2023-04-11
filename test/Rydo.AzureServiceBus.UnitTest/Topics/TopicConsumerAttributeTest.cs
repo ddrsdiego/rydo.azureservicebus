@@ -1,7 +1,7 @@
 ﻿namespace Rydo.AzureServiceBus.UnitTest.Topics
 {
     using Client.Topics;
-    using Consumer.ConsumerHandlers;
+    using Consumer.Models;
     using FluentAssertions;
     using NUnit.Framework;
 

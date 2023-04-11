@@ -1,33 +1,32 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Middlewares.Consumers
 {
-    using System.Linq;
     using System.Threading.Tasks;
+    using Client.Consumers.MessageRecordModel;
     using Client.Consumers.Subscribers;
     using Handlers;
     using Logging;
 
     internal sealed class DeserializerConsumerMiddleware : MessageMiddleware
     {
-        private readonly IMessageRecordFactory _messageRecordFactory;
-        
-        public DeserializerConsumerMiddleware(IMessageRecordFactory messageRecordFactory)
+        private readonly IMessageRecordAdapter _messageRecordAdapter;
+
+        public DeserializerConsumerMiddleware(IMessageRecordAdapter messageRecordAdapter)
             : base(nameof(DeserializerConsumerMiddleware))
         {
-            _messageRecordFactory = messageRecordFactory;
+            _messageRecordAdapter = messageRecordAdapter;
         }
 
         protected override string ConsumerMessagesStep => LogTypeConstants.DeserializerConsumerMessagesStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            var messages = context.MessagesContext.ToArray();
-            for (var index = 0; index < messages.Length; index++)
+            for (var index = 0; index < context.MessagesContext.Length; index++)
             {
-                var messageContext = messages[index];
-
-                await ConsumerObservable.PreConsumerAsync(messageContext);
+                var messageContext = context.MessagesContext[index] as MessageContext;
                 
-                var valueTask = _messageRecordFactory.ToMessageRecord(messageContext,
+                await ConsumerObservable.PreConsumerAsync(messageContext);
+
+                var valueTask = _messageRecordAdapter.ToMessageRecord(messageContext,
                     context.SubscriberContext.ContractType, context.CancellationToken);
 
                 var messageRecord = valueTask.IsCompletedSuccessfully

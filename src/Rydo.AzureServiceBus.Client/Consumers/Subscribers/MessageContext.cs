@@ -1,9 +1,9 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
     using System;
-    using Azure.Messaging.ServiceBus;
     using Handlers;
     using Headers;
+    using MessageRecordModel;
 
     internal static class ApplicationPropertiesEx
     {
@@ -17,19 +17,24 @@
             return messageHeaders;
         }
     }
-    
-    public sealed class MessageContext
+
+    public interface IMessageContext
     {
-        internal MessageContext(ServiceBusMessageContext serviceBusMessageContext)
+    }
+
+    public sealed class MessageContext : 
+        IMessageContext
+    {
+        internal MessageContext(IServiceBusMessageContext message)
         {
-            ServiceBusMessageContext = serviceBusMessageContext;
-            Headers = ServiceBusMessageContext.ExtractHeaders();
+            Message = message;
+            Headers = Message.ExtractHeaders();
         }
 
         internal MessageRecord Record;
         internal readonly IMessageHeaders Headers;
         internal MessageConsumerContext MessageConsumerContext;
-        internal readonly ServiceBusMessageContext ServiceBusMessageContext;
+        internal readonly IServiceBusMessageContext Message;
         
         internal void SetMessageRecord(MessageRecord messageRecord)
         {

@@ -1,7 +1,7 @@
 namespace Rydo.AzureServiceBus.Client.Handlers
 {
     using System.Threading;
-    using Consumers.Subscribers;
+    using Consumers.MessageRecordModel;
 
     public interface IConsumerContext
     {

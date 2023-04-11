@@ -22,10 +22,10 @@
 
         Task<bool> IsRunning { get; set; }
 
-        Task<bool> IsStopped { get; set; }
         Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext, CancellationToken stoppingToken);
-        Task<bool> StartAsync(CancellationToken stoppingToken);
 
-        Task<bool> StopAsync(CancellationToken stoppingToken);
+        Task<bool> StartAsync(CancellationTokenSource cancellationTokenSource);
+
+        Task<bool> StopAsync(CancellationTokenSource cancellationTokenSource);
     }
 }

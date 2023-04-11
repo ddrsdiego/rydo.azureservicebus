@@ -16,8 +16,6 @@
         internal static string GetString(this IMessageHeaders headers, string key) =>
             headers.GetString(key, Encoding.UTF8);
 
-        // internal static void Remove(this IMessageHeaders headers, string key) => headers.Remove(key);
-
         internal static IMessageHeaders SetPartition(this IMessageHeaders headers, string partitionKey)
         {
             headers.SetString(MessageHeadersDefault.PartitionKey, partitionKey);

@@ -5,7 +5,7 @@
     using Abstractions.Observers;
     using Consumers.Subscribers;
 
-    internal sealed class PrometheusIncomingReceiveObserver : IReceiveObserver
+    internal sealed class MetricsIncomingReceiveObserver : IReceiveObserver
     {
         public Task PreStartReceive(SubscriberContext context)
         {

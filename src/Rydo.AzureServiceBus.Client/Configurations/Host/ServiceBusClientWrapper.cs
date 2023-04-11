@@ -2,6 +2,7 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
 {
     using System;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
 
     public interface IServiceBusClientWrapper : IAsyncDisposable
     {
@@ -12,17 +13,17 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
 
     internal sealed class ServiceBusClientWrapper : IServiceBusClientWrapper
     {
-        public ServiceBusClientWrapper(IServiceBusHostSettings hostSettings)
+        public ServiceBusClientWrapper(ILoggerFactory logger, IServiceBusHostSettings hostSettings)
         {
             if (hostSettings == null) throw new ArgumentNullException(nameof(hostSettings));
 
             Admin = new ServiceBusClientAdmin(hostSettings);
             Sender = new ServiceBusClientSender(hostSettings);
-            Receiver = new ServiceBusClientReceiver(hostSettings);
+            Receiver = new ServiceBusClientReceiver(logger.CreateLogger<ServiceBusClientReceiver>(), hostSettings);
         }
 
         public IServiceBusClientAdmin Admin { get; }
-        
+
         public IServiceBusClientSender Sender { get; }
 
         public IServiceBusClientReceiver Receiver { get; }

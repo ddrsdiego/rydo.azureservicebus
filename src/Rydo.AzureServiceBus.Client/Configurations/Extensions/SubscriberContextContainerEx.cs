@@ -35,7 +35,7 @@
             var hostSettings =
                 new ServiceBusHostSettings(serviceBusClient, serviceBusAdministrationClient);
 
-            var serviceBusClientWrapper = new ServiceBusClientWrapper(hostSettings);
+            var serviceBusClientWrapper = new ServiceBusClientWrapper(logger, hostSettings);
             serviceBusClientWrapper.Admin.ConnectAdminClientObservers(new LogAdminClientObserver(logger));
 
             var receiverListener = new ReceiverListener(serviceBusClientWrapper, subscriberContext);

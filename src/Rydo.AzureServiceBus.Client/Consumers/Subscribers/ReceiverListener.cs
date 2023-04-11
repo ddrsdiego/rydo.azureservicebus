@@ -7,10 +7,8 @@
     using System.Threading.Tasks;
     using Abstractions.Observers;
     using Abstractions.Observers.Observables;
-    using Azure.Messaging.ServiceBus;
     using Configurations.Host;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Handlers;
     using Middlewares;
     using Middlewares.Observers;
@@ -26,7 +24,7 @@
         private readonly SubscriberContext _subscriberContext;
         private readonly CancellationToken _cancellationToken;
         private readonly ReceiveObservable _receiveObservable;
-        private readonly Channel<ServiceBusMessageContext> _queue;
+        private readonly Channel<IServiceBusMessageContext> _messagesBuffer;
         private readonly TaskCompletionSource<bool> _taskCompletion;
         private readonly IServiceBusClientAdmin _serviceBusClientAdmin;
         private readonly IServiceBusClientReceiver _serviceBusClientReceiver;
@@ -39,9 +37,8 @@
             _serviceBusClientAdmin = serviceBusClientWrapper.Admin;
             _serviceBusClientReceiver = serviceBusClientWrapper.Receiver;
 
-            _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             IsRunning = Task.FromResult(true);
-            IsStopped = Task.FromResult(false);
+            _taskCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             _receiveObservable = new ReceiveObservable();
             _finishConsumerMiddlewareObservable = new FinishConsumerMiddlewareObservable();
@@ -56,7 +53,7 @@
                 SingleWriter = false
             };
 
-            _queue = Channel.CreateBounded<ServiceBusMessageContext>(channelOptions);
+            _messagesBuffer = Channel.CreateBounded<IServiceBusMessageContext>(channelOptions);
 
             _readerTask = Task.Run(async () => await ReadFromChannel());
         }
@@ -75,91 +72,89 @@
 
         public Task<bool> IsRunning { get; set; }
 
-        public Task<bool> IsStopped { get; set; }
+        public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer) => _receiveObservable.Connect(observer);
 
-        public IConnectHandle ConnectReceiveObserver(IReceiveObserver observer)
-        {
-            return _receiveObservable.Connect(observer);
-        }
-
-        public IConnectHandle ConnectFinishConsumerMiddlewareObserver(IFinishConsumerMiddlewareObserver observer)
-        {
-            return _finishConsumerMiddlewareObservable.Connect(observer);
-        }
+        public IConnectHandle ConnectFinishConsumerMiddlewareObserver(IFinishConsumerMiddlewareObserver observer) =>
+            _finishConsumerMiddlewareObservable.Connect(observer);
 
         public Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext, CancellationToken stoppingToken)
             => _serviceBusClientAdmin.CreateEntitiesIfNotExistAsync(subscriberContext, stoppingToken);
 
-        public async Task<bool> StartAsync(CancellationToken stoppingToken)
+        public async Task<bool> StartAsync(CancellationTokenSource cancellationTokenSource)
         {
-            await CreateReceiversAsync(stoppingToken);
+            await CreateReceiversAsync(cancellationTokenSource);
 
-            while (!stoppingToken.IsCancellationRequested)
+            while (!cancellationTokenSource.Token.IsCancellationRequested)
             {
-                if (stoppingToken.IsCancellationRequested)
-                    break;
-
-                await foreach (var receivedMessages in _serviceBusClientReceiver.StartConsumerAsync(
-                                   cancellationToken: stoppingToken))
+                try
                 {
-                    if (receivedMessages == null) continue;
-                    await EnqueueAsync(receivedMessages, stoppingToken);
+                    if (cancellationTokenSource.Token.IsCancellationRequested)
+                        break;
+
+                    await foreach (var receivedMessages in _serviceBusClientReceiver.StartConsumerAsync(
+                                       cancellationToken: cancellationTokenSource.Token))
+                    {
+                        if (receivedMessages == null) continue;
+                        await EnqueueAsync(receivedMessages, cancellationTokenSource.Token);
+                    }
+                }
+                catch (OperationCanceledException e) when (e.CancellationToken == _cancellationToken)
+                {
+                    await StopAsync(cancellationTokenSource);
+                }
+                catch (Exception e)
+                {
+                    await StopAsync(cancellationTokenSource);
                 }
             }
 
             return IsRunning.Result;
         }
 
-        public async Task<bool> StopAsync(CancellationToken stoppingToken)
+        public async Task<bool> StopAsync(CancellationTokenSource cancellationTokenSource)
         {
             try
             {
-                _queue.Writer.Complete();
+                _messagesBuffer.Writer.TryComplete();
 
+                await _readerTask;
                 await _taskCompletion.Task;
                 await _serviceBusClientReceiver.DisposeAsync();
-
                 _readerTask.Dispose();
-
-                IsRunning = _taskCompletion.Task;
-
-                return await IsRunning;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
+            finally
+            {
+                IsRunning = Task.FromResult(false);
+            }
+
+            return IsRunning.Result;
         }
 
-        private async Task CreateReceiversAsync(CancellationToken stoppingToken)
+        private async Task CreateReceiversAsync(CancellationTokenSource cancellationTokenSource)
         {
             try
             {
                 await _receiveObservable.PreStartReceive(_subscriberContext);
 
-                var options = new ServiceBusReceiverOptions
-                {
-                    PrefetchCount = _subscriberContext.Specification.PrefetchCount,
-                    Identifier = _subscriberContext.Specification.SubscriptionName,
-                    ReceiveMode = _subscriberContext.Specification.ReceiveMode
-                };
-
-                _serviceBusClientReceiver.TryCreateReceiver(_subscriberContext.Specification.QueueName, options);
+                _serviceBusClientReceiver.TryCreateReceiver(_subscriberContext);
 
                 await _receiveObservable.PostStartReceive(_subscriberContext);
             }
             catch (Exception e)
             {
                 await _receiveObservable.FaultStartReceive(_subscriberContext, e);
-                await StopAsync(stoppingToken);
+                await StopAsync(cancellationTokenSource);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ValueTask EnqueueAsync(ServiceBusMessageContext receivedMessage, CancellationToken cancellationToken)
+        internal ValueTask EnqueueAsync(IServiceBusMessageContext receivedMessage, CancellationToken cancellationToken)
         {
-            return _queue.Writer.WriteAsync(receivedMessage, cancellationToken);
+            return _messagesBuffer.Writer.WriteAsync(receivedMessage, cancellationToken);
         }
 
         private async Task ReadFromChannel()
@@ -168,14 +163,14 @@
 
             try
             {
-                while (await _queue.Reader.WaitToReadAsync())
+                while (await _messagesBuffer.Reader.WaitToReadAsync())
                 {
                     var counter = 0;
 
                     var messageConsumerContext =
                         new MessageConsumerContext(_subscriberContext, _serviceBusClientReceiver, _cancellationToken);
 
-                    while (counter < batchCapacity && _queue.Reader.TryRead(out var receivedMessage))
+                    while (counter < batchCapacity && _messagesBuffer.Reader.TryRead(out var receivedMessage))
                     {
                         var messageContext = new MessageContext(receivedMessage);
                         messageConsumerContext.Add(messageContext);
@@ -195,11 +190,11 @@
             }
             catch (OperationCanceledException e) when (e.CancellationToken == _cancellationToken)
             {
+                Console.WriteLine(e);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
             }
             finally
             {

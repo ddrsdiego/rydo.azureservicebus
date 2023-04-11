@@ -52,19 +52,4 @@
             return new SubscriberSpecification(consumerConfigurator.Value);
         }
     }
-    //
-    // public class ConsumerContextTest
-    // {
-    //     [Test]
-    //     public void Test()
-    //     {
-    //         var consumerSpecification = new ConsumerSpecificationBuilderTest()
-    //             .TopicName("account-created")
-    //             .SubscriptionName("Rydo.AzureServiceBus.UnitTest.Handlers")
-    //             .MaxDelivery(10)
-    //             .MaxDeliveryCount(1000)
-    //             .LockDurationInMinutes(1)
-    //             .Build();
-    //     }
-    // }
 }

@@ -20,10 +20,12 @@
         {
             var completeMessageTasks = new Dictionary<MessageContext, Task>(context.Length);
 
-            foreach (var messageContext in context.MessagesContext)
+            for (var index = 0; index < context.MessagesContext.Length; index++)
             {
+                var messageContext = context.MessagesContext[index] as MessageContext;
+
                 var completeMessageTask =
-                    context.Receiver.CompleteMessageAsync(messageContext.ServiceBusMessageContext, context.CancellationToken);
+                    context.Receiver.CompleteMessageAsync(messageContext.Message, context.CancellationToken);
 
                 completeMessageTasks.Add(messageContext, completeMessageTask);
             }
@@ -33,10 +35,12 @@
                 try
                 {
                     if (task.Value.IsCompletedSuccessfully) continue;
+
                     await SlowCompleteMessage(task.Value);
                 }
                 catch (Exception e)
                 {
+                    //TODO -> implementar tratamento de erro CompleteMessageAsync
                 }
             }
 

@@ -2,18 +2,7 @@
 {
     using Client.Handlers;
     using Client.Topics;
-
-    public class AccountCreated
-    {
-        public string AccountNumber { get; }
-        public DateTime CreatedAt { get; }
-
-        public AccountCreated(string accountNumber)
-        {
-            CreatedAt = DateTime.Now;
-            AccountNumber = accountNumber;
-        }
-    }
+    using Models;
 
     [TopicConsumer(typeof(AccountCreated), TopicNameConstants.AccountCreated)]
     public class AccountCreatedConsumerHandler : IConsumerHandler<AccountCreated>
@@ -33,7 +22,7 @@
             for (var index = 0; index < messageRecords.Length; index++)
             {
                 var accountCreated = messageRecords[index].Value;
-                tasks[index] = Task.Delay(100, context.CancellationToken);
+                tasks[index] = Task.Delay(250, context.CancellationToken);
             }
 
             for (var index = 0; index < tasks.Length; index++)

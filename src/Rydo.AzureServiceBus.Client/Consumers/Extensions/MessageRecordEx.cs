@@ -1,7 +1,7 @@
 ﻿namespace Rydo.AzureServiceBus.Client.Consumers.Extensions
 {
     using System;
-    using Subscribers;
+    using MessageRecordModel;
 
     public static class MessageRecordEx
     {

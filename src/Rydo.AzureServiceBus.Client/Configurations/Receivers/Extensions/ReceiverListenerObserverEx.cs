@@ -14,7 +14,7 @@
         {
             var logger = sp.GetRequiredService<ILoggerFactory>();
             
-            receiverListener.ConnectReceiveObserver(new PrometheusIncomingReceiveObserver());
+            receiverListener.ConnectReceiveObserver(new MetricsIncomingReceiveObserver());
             receiverListener.ConnectReceiveObserver(new LogReceiveObserver(logger));
             receiverListener.ConnectFinishConsumerMiddlewareObserver(new LogFinishConsumerMiddlewareObserver(logger));
         }

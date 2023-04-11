@@ -15,9 +15,6 @@
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            // if (!context.AnyFault)
-            //     await next(context);
-            
             await Task.CompletedTask;
         }
     }

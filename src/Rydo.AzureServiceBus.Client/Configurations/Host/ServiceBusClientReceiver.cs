@@ -7,71 +7,104 @@
     using System.Threading.Tasks;
     using Azure.Messaging.ServiceBus;
     using Consumers.Subscribers;
+    using Microsoft.Extensions.Logging;
+    using Utils;
 
     public interface IServiceBusClientReceiver : IAsyncDisposable
     {
-        void TryCreateReceiver(string queueName, ServiceBusReceiverOptions options);
-        
-        Task CompleteMessageAsync(ServiceBusMessageContext serviceBusMessageContext,
+        void TryCreateReceiver(SubscriberContext subscriberContext);
+
+        Task CompleteMessageAsync(IServiceBusMessageContext serviceBusMessageContext,
             CancellationToken cancellationToken = default);
 
-        IAsyncEnumerable<ServiceBusMessageContext> StartConsumerAsync(CancellationToken cancellationToken);
+        IAsyncEnumerable<IServiceBusMessageContext> StartConsumerAsync(CancellationToken cancellationToken);
     }
 
     internal sealed class ServiceBusClientReceiver : IServiceBusClientReceiver
     {
         private readonly object _lockObject;
+        private readonly ILogger<ServiceBusClientReceiver> _logger;
         private readonly IServiceBusHostSettings _hostSettings;
+        private readonly SemaphoreSlim _semaphoreSlim;
         
         private ServiceBusReceiver _serviceBusReceiver;
-        
-        internal ServiceBusClientReceiver(IServiceBusHostSettings hostSettings)
+        private SubscriberContext _subscriberContext;
+
+        internal ServiceBusClientReceiver(ILogger<ServiceBusClientReceiver> logger,
+            IServiceBusHostSettings hostSettings)
         {
+            _logger = logger;
             _hostSettings = hostSettings ?? throw new ArgumentNullException(nameof(hostSettings));
+            
             _lockObject = new object();
+            _semaphoreSlim = new SemaphoreSlim(1, 1);
         }
 
-        public Task CompleteMessageAsync(ServiceBusMessageContext serviceBusMessageContext,
+        public Task CompleteMessageAsync(IServiceBusMessageContext serviceBusMessageContext,
             CancellationToken cancellationToken = default)
         {
-            return _serviceBusReceiver.CompleteMessageAsync(serviceBusMessageContext.Message, cancellationToken);
+            var messageContext = (ServiceBusMessageContext) serviceBusMessageContext;
+            return _serviceBusReceiver.CompleteMessageAsync(messageContext.Message, cancellationToken);
         }
 
-        public void TryCreateReceiver(string queueName, ServiceBusReceiverOptions options)
-        {
-            EnsureReceiver(queueName, options);
-        }
+        public void TryCreateReceiver(SubscriberContext subscriberContext) => EnsureReceiver(subscriberContext);
 
-        public async IAsyncEnumerable<ServiceBusMessageContext> StartConsumerAsync(
+        public async IAsyncEnumerable<IServiceBusMessageContext> StartConsumerAsync(
             [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (var serviceBusReceivedMessage in _serviceBusReceiver.ReceiveMessagesAsync(cancellationToken))
+            var receiveMessages =
+                await _serviceBusReceiver.ReceiveMessagesAsync(_subscriberContext.Specification.PrefetchCount, cancellationToken: cancellationToken);
+
+            foreach (var receivedMessage in receiveMessages)
             {
-                if (serviceBusReceivedMessage == null) continue;
-                yield return new ServiceBusMessageContext(serviceBusReceivedMessage);
+                if (receivedMessage == null) continue;
+                yield return new ServiceBusMessageContext(receivedMessage);
             }
         }
 
-        private void EnsureReceiver(string queueName, ServiceBusReceiverOptions options)
+        private void EnsureReceiver(SubscriberContext subscriberContext)
         {
-            if (_serviceBusReceiver != null)
-                return;
-
             lock (_lockObject)
             {
-                _serviceBusReceiver = _hostSettings.ServiceBusClient.CreateReceiver(queueName, options);
+                _subscriberContext ??= subscriberContext;
+
+                if (_serviceBusReceiver != null)
+                    return;
+
+                var options = new ServiceBusReceiverOptions
+                {
+                    PrefetchCount = _subscriberContext.Specification.PrefetchCount,
+                    Identifier = _subscriberContext.Specification.SubscriptionName,
+                    ReceiveMode = _subscriberContext.Specification.ReceiveMode
+                };
+
+                _serviceBusReceiver =
+                    _hostSettings.ServiceBusClient.CreateReceiver(_subscriberContext.Specification.QueueName, options);
+
+                _logger.LogInformation("{Id} - {EntityPath}", GeneratorOperationId.Generate(),
+                    _serviceBusReceiver.EntityPath);
             }
         }
 
         public async ValueTask DisposeAsync()
         {
-            lock (_lockObject)
+            await _semaphoreSlim.WaitAsync();
+
+            try
             {
                 if (_serviceBusReceiver == null || _serviceBusReceiver.IsClosed)
                     return;
+                
+                await _serviceBusReceiver.DisposeAsync();
             }
-
-            await _serviceBusReceiver.DisposeAsync();
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
         }
     }
 }

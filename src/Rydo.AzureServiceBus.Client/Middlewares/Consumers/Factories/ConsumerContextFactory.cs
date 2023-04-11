@@ -2,12 +2,12 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Linq;
     using System.Runtime.CompilerServices;
+    using Client.Consumers.MessageRecordModel;
     using Client.Consumers.Subscribers;
     using Handlers;
 
-    public abstract class ConsumerContextFactory
+    internal abstract class ConsumerContextFactory
     {
         private static readonly ConcurrentDictionary<Type, Lazy<ConsumerContextFactory>> Executors =
             new ConcurrentDictionary<Type, Lazy<ConsumerContextFactory>>();
@@ -19,9 +19,11 @@
         public static ConsumerContextFactory GetConsumerContext(Type messageType)
         {
             var consumerContextFactory = Executors.GetOrAdd(messageType, _ =>
-                new Lazy<ConsumerContextFactory>(() =>
+            {
+                return new Lazy<ConsumerContextFactory>(() =>
                     (ConsumerContextFactory) Activator.CreateInstance(
-                        typeof(InnerConsumerContext<>).MakeGenericType(messageType), messageType)));
+                        typeof(InnerConsumerContext<>).MakeGenericType(messageType), messageType));
+            });
 
             return consumerContextFactory.Value;
         }
@@ -39,16 +41,16 @@
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override IConsumerContext Execute(MessageConsumerContext consumerContext)
             {
-                var messageRecordExecutor = MessageRecordFactory.GetConsumerContext(MessageType);
-                var messageRecords = consumerContext.Messages.ToArray();
+                var items = new MessageRecord<TMessage>[consumerContext.MessagesContext.Length];
 
-                var items = new MessageRecord<TMessage>[messageRecords.Length];
-                for (var index = 0; index < messageRecords.Length; index++)
+                for (var index = 0; index < consumerContext.MessagesContext.Length; index++)
                 {
-                    var messageRecord = messageRecordExecutor.Execute(messageRecords[index]);
+                    var messageContext = consumerContext.MessagesContext[index];
+                    var messageRecord = ((MessageContext) messageContext).Record;
+                    if (messageRecord.IsInvalid)
+                        continue;
 
-                    var item = (MessageRecord<TMessage>) messageRecord;
-                    items[index] = item;
+                    items[index] = messageRecord.GetMessageRecordTyped<TMessage>() as MessageRecord<TMessage>;
                 }
 
                 return new ConsumeContextScope<TMessage>(new ConsumerContext<TMessage>(consumerContext, items));

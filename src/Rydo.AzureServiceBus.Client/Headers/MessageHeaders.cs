@@ -36,13 +36,23 @@
             get => _headers != null && _headers.TryGetLastBytes(key, out var value) ? value : null;
             set
             {
-                _headers?.Remove(key);
-                _headers?.Add(key, value);
+                _headers.Remove(key);
+                _headers.Add(key, value);
             }
         }
 
-        public void Remove(string key) => _headers?.Remove(key);
+        /// <summary>
+        /// Adds a new header to the enumeration
+        /// </summary>
+        /// <param name="key">The header key.</param>
+        /// <param name="value">The header value (possibly null)</param>
+        public void Add(string key, byte[] value)
+        {
+            _headers.Add(key, value);
+        }
+        
+        public void Remove(string key) => _headers.Remove(key);
 
-        // public Headers GetHeaders() => _headers;
+        public Headers GetHeaders() => _headers;
     }
 }

@@ -25,7 +25,7 @@
         string CorrelationId { get; }
         string MessageId { get; }
         DateTime ExpiresAt { get; }
-        BinaryData Body { get; }
+        IMessageBody Body { get; }
         string ContentType { get; }
     }
 
@@ -37,8 +37,10 @@
         public ServiceBusMessageContext(ServiceBusReceivedMessage message)
         {
             Message = message;
+            Body = new ServiceBusMessageBody(message.Body);
         }
 
+        public IMessageBody Body { get; }
         public string ContentType => Message.ContentType;
         public int DeliveryCount => Message.DeliveryCount;
         public string Label => Message.Subject;
@@ -59,6 +61,5 @@
         public string CorrelationId => Message.CorrelationId;
         public string MessageId => Message.MessageId;
         public DateTime ExpiresAt => Message.ExpiresAt.UtcDateTime;
-        public BinaryData Body => Message.Body;
     }
 }
