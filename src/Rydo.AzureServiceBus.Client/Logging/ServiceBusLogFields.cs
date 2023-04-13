@@ -10,6 +10,9 @@
         public const string MessageConsumerContextLength = "{MessageConsumercontextLength}";
         public const string ElapsedMilliseconds = "{ElapsedMilliseconds}";
         public const string MiddlewareType = "{MiddlewareTpe}";
-        public const string MsgConsumerContextAuditMedata = "{@MsgConsumerContextAuditMedata}";
+        //CreateQueueOptions
+        public const string CreateQueueOptions = "{@CreateQueueOptions}";
+        public const string MessageConsumerContextAuditLog = "{@MsgConsumerContextAuditMedata}";
+        
     }
 }

@@ -175,10 +175,8 @@
                     {
                         var messageContext = new MessageContext(receivedMessage);
                         messageConsumerContext.Add(messageContext);
-
-                        if (_receiveObservable.Count >= 0)
-                            await _receiveObservable.PreReceiveAsync(messageContext);
-
+                        
+                        await _receiveObservable.PreReceiveAsync(messageContext);
                         counter++;
                     }
 
@@ -186,8 +184,7 @@
                     messageConsumerContext.SetServiceScope(scope);
                     await _middlewareExecutor.Execute(scope, messageConsumerContext, _ => Task.CompletedTask);
 
-                    if (_finishConsumerMiddlewareObservable.Count > 0)
-                        await _finishConsumerMiddlewareObservable.EndConsumerAsync(messageConsumerContext);
+                    await _finishConsumerMiddlewareObservable.EndConsumerAsync(messageConsumerContext);
                 }
             }
             catch (OperationCanceledException e) when (e.CancellationToken == _cancellationToken)

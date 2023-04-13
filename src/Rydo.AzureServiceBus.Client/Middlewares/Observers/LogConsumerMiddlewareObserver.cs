@@ -21,7 +21,7 @@
 
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogDebug(
-                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
+                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageConsumerContextAuditLog}",
                 step,
                 messageAudit);
 
@@ -36,7 +36,7 @@
 
             var messageAudit = ConsumeMetadataFactory.CreateAuditMetadata(context, middlewareType, stepFormat);
             _logger.LogInformation(
-                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
+                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MessageConsumerContextAuditLog}",
                 step,
                 messageAudit);
 

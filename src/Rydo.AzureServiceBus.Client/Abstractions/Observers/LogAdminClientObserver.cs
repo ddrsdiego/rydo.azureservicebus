@@ -15,7 +15,7 @@
         public Task VerifyQueueExitsAsync(CreateQueueOptions queueOptions)
         {
             _logger.LogInformation(
-                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.MsgConsumerContextAuditMedata}",
+                $"[{ServiceBusLogFields.LogType}] - {ServiceBusLogFields.CreateQueueOptions}",
                 LogTypeConstants.VerifyQueueExists,
                 queueOptions);
 

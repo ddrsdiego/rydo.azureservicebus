@@ -7,9 +7,9 @@
     internal sealed class FinishConsumerMiddlewareObservable : Connectable<IFinishConsumerMiddlewareObserver>,
         IFinishConsumerMiddlewareObserver
     {
-        public Task EndConsumerAsync(MessageConsumerContext context)
-        {
-            return ForEachAsync(x => x.EndConsumerAsync(context));
-        }
+        public Task EndConsumerAsync(MessageConsumerContext context) =>
+            Count <= 0 ?
+                Task.CompletedTask
+                : ForEachAsync(x => x.EndConsumerAsync(context));
     }
 }

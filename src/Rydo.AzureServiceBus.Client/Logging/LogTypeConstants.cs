@@ -15,5 +15,6 @@
         public const string CustomHandlerConsumerStep = "custom-handler-consumer-messages";
         public const string DeadLetterConsumerStep = "dead-letter-consumer-messages";
         public const string DeserializerConsumerMessagesStep = "deserializer-consumer-messages";
+        public const string FinishConsumerContext = "finish-consumer-context";
     }
 }
