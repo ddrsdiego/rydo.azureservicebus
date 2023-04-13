@@ -18,7 +18,7 @@
         internal SubscriberContextContainer(IServiceCollection services)
         {
             _services = services;
-            Contexts = ImmutableDictionary<string, SubscriberContext>.Empty;
+            Contexts = ImmutableDictionary<string, ISubscriberContext>.Empty;
         }
 
         public void WithTypes(IEnumerable<Type> types)
@@ -73,9 +73,9 @@
             Contexts = Contexts.Add(context.Specification.QueueName, context);
         }
 
-        public ImmutableDictionary<string, SubscriberContext> Contexts { get; private set; }
+        public ImmutableDictionary<string, ISubscriberContext> Contexts { get; private set; }
 
-        public bool TryGetConsumerContext(string topicName, out SubscriberContext context)
+        public bool TryGetConsumerContext(string topicName, out ISubscriberContext context)
         {
             context = default;
             return Contexts.TryGetValue(topicName, out context);

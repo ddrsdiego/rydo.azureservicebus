@@ -17,11 +17,11 @@
 
     internal sealed class ReceiverListener : IReceiverListener
     {
-        private IServiceProvider _serviceProvider;
         private IMiddlewareExecutor _middlewareExecutor;
 
         private readonly Task _readerTask;
         private readonly SubscriberContext _subscriberContext;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly CancellationToken _cancellationToken;
         private readonly ReceiveObservable _receiveObservable;
         private readonly Channel<IServiceBusMessageContext> _messagesBuffer;
@@ -30,9 +30,16 @@
         private readonly IServiceBusClientReceiver _serviceBusClientReceiver;
         private readonly FinishConsumerMiddlewareObservable _finishConsumerMiddlewareObservable;
 
-        internal ReceiverListener(IServiceBusClientWrapper serviceBusClientWrapper, SubscriberContext subscriberContext)
+        internal ReceiverListener(IServiceBusClientWrapper serviceBusClientWrapper,
+            ISubscriberContext subscriberContext,
+            IServiceScopeFactory serviceScopeFactory)
         {
-            _subscriberContext = subscriberContext ?? throw new ArgumentNullException(nameof(subscriberContext));
+            if (serviceBusClientWrapper == null)
+                throw new ArgumentNullException(nameof(serviceBusClientWrapper));
+
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
+            _subscriberContext = (SubscriberContext) subscriberContext ??
+                                 throw new ArgumentNullException(nameof(subscriberContext));
 
             _serviceBusClientAdmin = serviceBusClientWrapper.Admin;
             _serviceBusClientReceiver = serviceBusClientWrapper.Receiver;
@@ -45,7 +52,7 @@
 
             _cancellationToken = new CancellationToken();
 
-            var channelOptions = new BoundedChannelOptions(subscriberContext.Specification.Consumer.BufferSize)
+            var channelOptions = new BoundedChannelOptions(_subscriberContext.Specification.Consumer.BufferSize)
             {
                 AllowSynchronousContinuations = true,
                 FullMode = BoundedChannelFullMode.Wait,
@@ -54,14 +61,7 @@
             };
 
             _messagesBuffer = Channel.CreateBounded<IServiceBusMessageContext>(channelOptions);
-
             _readerTask = Task.Run(async () => await ReadFromChannel());
-        }
-
-        public IReceiverListener ServiceProvider(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-            return this;
         }
 
         public IReceiverListener MiddleExecutor(IMiddlewareExecutor middlewareExecutor)
@@ -77,7 +77,7 @@
         public IConnectHandle ConnectFinishConsumerMiddlewareObserver(IFinishConsumerMiddlewareObserver observer) =>
             _finishConsumerMiddlewareObservable.Connect(observer);
 
-        public Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext, CancellationToken stoppingToken)
+        public Task CreateEntitiesIfNotExistAsync(ISubscriberContext subscriberContext, CancellationToken stoppingToken)
             => _serviceBusClientAdmin.CreateEntitiesIfNotExistAsync(subscriberContext, stoppingToken);
 
         public async Task<bool> StartAsync(CancellationTokenSource cancellationTokenSource)
@@ -102,7 +102,7 @@
                 {
                     await StopAsync(cancellationTokenSource);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     await StopAsync(cancellationTokenSource);
                 }
@@ -120,6 +120,7 @@
                 await _readerTask;
                 await _taskCompletion.Task;
                 await _serviceBusClientReceiver.DisposeAsync();
+
                 _readerTask.Dispose();
             }
             catch (Exception e)
@@ -181,8 +182,9 @@
                         counter++;
                     }
 
-                    await _middlewareExecutor.Execute(_serviceProvider.CreateScope(), messageConsumerContext,
-                        _ => Task.CompletedTask);
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    messageConsumerContext.SetServiceScope(scope);
+                    await _middlewareExecutor.Execute(scope, messageConsumerContext, _ => Task.CompletedTask);
 
                     if (_finishConsumerMiddlewareObservable.Count > 0)
                         await _finishConsumerMiddlewareObservable.EndConsumerAsync(messageConsumerContext);

@@ -26,8 +26,9 @@
         }
 
         private static IReceiverListener CreateReceiverListener(IServiceProvider serviceProvider,
-            SubscriberContext subscriberContext)
+            ISubscriberContext subscriberContext)
         {
+            var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>();
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>();
             var serviceBusClient = serviceProvider.GetRequiredService<ServiceBusClient>();
             var serviceBusAdministrationClient = serviceProvider.GetRequiredService<ServiceBusAdministrationClient>();
@@ -38,7 +39,7 @@
             var serviceBusClientWrapper = new ServiceBusClientWrapper(logger, hostSettings);
             serviceBusClientWrapper.Admin.ConnectAdminClientObservers(new LogAdminClientObserver(logger));
 
-            var receiverListener = new ReceiverListener(serviceBusClientWrapper, subscriberContext);
+            var receiverListener = new ReceiverListener(serviceBusClientWrapper, subscriberContext, scope);
             receiverListener.ConnectObservers(serviceProvider);
 
             return receiverListener;

@@ -39,6 +39,8 @@
         private Task ExecuteDefinition(int index, IServiceScope scope, MessageConsumerContext context,
             Func<MessageConsumerContext, Task> nextOperation)
         {
+            const int oneIncrementPosition = 1;
+
             MiddlewareConfiguration configuration = default;
 
             if (index == _middlewareConfigurationContainer?.TotalConfigurations)
@@ -53,11 +55,7 @@
             var messageMiddleware = ResolveInstance(index, scope, configuration);
 
             return messageMiddleware.InvokeAsync(context,
-                nextContext =>
-                {
-                    const int oneIncrementPosition = 1;
-                    return ExecuteDefinition(index + oneIncrementPosition, scope, nextContext, nextOperation);
-                });
+                nextContext => ExecuteDefinition(index + oneIncrementPosition, scope, nextContext, nextOperation));
         }
 
         private IMessageMiddleware ResolveInstance(int index, IServiceScope scope,
@@ -84,7 +82,7 @@
 
             middleware.ConnectConsumerObserver(new LogConsumerObserver(logger));
             middleware.ConnectConsumerMiddlewareObserver(new LogConsumerMiddlewareObserver(logger));
-            
+
             return middleware;
         }
     }

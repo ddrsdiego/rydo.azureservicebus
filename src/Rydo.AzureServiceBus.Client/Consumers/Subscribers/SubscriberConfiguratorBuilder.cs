@@ -19,7 +19,6 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
         private int _autoDeleteAfterIdleInHours;
         private ServiceBusReceiveMode _receiveMode;
 
-
         internal SubscriberConfiguratorBuilder(string topicName, string subscriptionName)
         {
             _topicName = topicName ?? throw new ArgumentNullException(nameof(topicName));
@@ -110,7 +109,7 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
             return this;
         }
 
-        public SubscriberConfiguratorBuilder ReceiveMode(ServiceBusReceiveMode receiveMode)
+        private SubscriberConfiguratorBuilder ReceiveMode(ServiceBusReceiveMode receiveMode)
         {
             _receiveMode = receiveMode;
             return this;

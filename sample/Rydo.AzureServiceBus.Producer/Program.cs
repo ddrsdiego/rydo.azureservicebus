@@ -38,6 +38,7 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Assembly.Get
 app.MapPost("api/v1/accounts/{amount:int}", async (ServiceBusClient serviceBusClient, int amount) =>
 {
     var sender = serviceBusClient.CreateSender(TopicNameConstants.AccountCreated);
+    
     var tasks = Enumerable.Range(0, amount).Select(async index =>
     {
         var accountNumber = index.ToString("0000000");
@@ -55,11 +56,13 @@ app.MapPost("api/v1/accounts/{amount:int}", async (ServiceBusClient serviceBusCl
             },
             PartitionKey = accountCreatedMessage.AccountNumber
         };
-
+        
         await sender.SendMessageAsync(message);
     });
-    
+        
     await Task.WhenAll(tasks);
+    await Task.Delay(1_000);
+    
     return Results.Accepted();
 });
 

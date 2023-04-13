@@ -20,9 +20,9 @@
 
         void Add(string subscriptionName, Action<SubscriberConfiguratorBuilder> configurator);
 
-        ImmutableDictionary<string, SubscriberContext> Contexts { get; }
+        ImmutableDictionary<string, ISubscriberContext> Contexts { get; }
 
-        bool TryGetConsumerContext(string topicName, out SubscriberContext context);
+        bool TryGetConsumerContext(string topicName, out ISubscriberContext context);
     }
 
     public interface IConsumerConfigurator

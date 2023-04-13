@@ -9,13 +9,13 @@ namespace Rydo.AzureServiceBus.Client.Configurations
     {
         internal ServiceBusClientConfigurator(IServiceCollection services)
         {
-            Services = services;
-            Host = new ServiceBusHostConfigurator(Services);
-            Receiver = new ServiceBusReceiverConfigurator(Services);
-            Producers = new ServiceBusProducersConfigurator(Services);
+            Collection = services;
+            Host = new ServiceBusHostConfigurator(Collection);
+            Receiver = new ServiceBusReceiverConfigurator(Collection);
+            Producers = new ServiceBusProducersConfigurator(Collection);
         }
 
-        public IServiceCollection Services { get; }
+        public IServiceCollection Collection { get; }
         public ServiceBusHostConfigurator Host { get; }
         public ServiceBusReceiverConfigurator Receiver { get; }
         public ServiceBusProducersConfigurator Producers { get; }

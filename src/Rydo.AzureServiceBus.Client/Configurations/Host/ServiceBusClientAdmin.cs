@@ -5,13 +5,14 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
     using System.Threading.Tasks;
     using Abstractions.Observers;
     using Abstractions.Observers.Observables;
+    using Azure.Messaging.ServiceBus;
     using Azure.Messaging.ServiceBus.Administration;
     using Consumers.Subscribers;
     using Utils;
 
     public interface IServiceBusClientAdmin : IAdminObserverConnector, IAsyncDisposable
     {
-        Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext,
+        Task CreateEntitiesIfNotExistAsync(ISubscriberContext context,
             CancellationToken cancellationToken = default);
     }
 
@@ -28,9 +29,11 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
 
         public ValueTask DisposeAsync() => new ValueTask(Task.CompletedTask);
 
-        public async Task CreateEntitiesIfNotExistAsync(SubscriberContext subscriberContext,
+        public async Task CreateEntitiesIfNotExistAsync(ISubscriberContext context,
             CancellationToken cancellationToken = default)
         {
+            var subscriberContext = (SubscriberContext) context;
+            
             await CreateQueueIfNotExistAsync(subscriberContext, cancellationToken);
             await CreateTopicIfNotExistAsync(subscriberContext, cancellationToken);
             await CreateSubscriptionIfNotExistAsync(subscriberContext, cancellationToken);
@@ -42,17 +45,17 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
         private async Task CreateSubscriptionIfNotExistAsync(SubscriberContext subscriberContext,
             CancellationToken cancellationToken)
         {
+            var subscriptionOptions = new CreateSubscriptionOptions(subscriberContext.Specification.TopicName,
+                subscriberContext.Specification.SubscriptionName)
+            {
+                ForwardTo = subscriberContext.Specification.QueueName,
+                LockDuration = subscriberContext.Specification.LockDurationInSeconds,
+                MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
+            };
+            
             try
             {
                 await _adminClientClientObservable.PreConsumerAsync(subscriberContext);
-
-                var subscriptionOptions = new CreateSubscriptionOptions(subscriberContext.Specification.TopicName,
-                    subscriberContext.Specification.SubscriptionName)
-                {
-                    ForwardTo = subscriberContext.Specification.QueueName,
-                    LockDuration = subscriberContext.Specification.LockDurationInSeconds,
-                    MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
-                };
 
                 var subscriptionExists =
                     await _hostSettings.AdminClient.SubscriptionExistsAsync(subscriberContext.Specification.TopicName,
@@ -62,10 +65,9 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
                 if (!subscriptionExists.Value)
                     await _hostSettings.AdminClient.CreateSubscriptionAsync(subscriptionOptions, cancellationToken);
             }
-            catch (Exception e)
+            catch (ServiceBusException)
             {
-                Console.WriteLine(e);
-                throw;
+                await _hostSettings.AdminClient.CreateSubscriptionAsync(subscriptionOptions, cancellationToken);
             }
         }
 
@@ -75,22 +77,32 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
                 await _hostSettings.AdminClient.TopicExistsAsync(context.Specification.TopicName, cancellationToken);
 
             var topicOptions = new CreateTopicOptions(context.Specification.TopicName);
-            if (!topicExists.Value)
-                await _hostSettings.AdminClient.CreateTopicAsync(topicOptions, cancellationToken);
+            
+            try
+            {
+                if (!topicExists.Value)
+                    await _hostSettings.AdminClient.CreateTopicAsync(topicOptions, cancellationToken);
+            }
+            catch (ServiceBusException)
+            {
+                // most likely a race between two clients trying to create the same topic - we should be able to get it now
+                if (!topicExists.Value)
+                    await _hostSettings.AdminClient.CreateTopicAsync(topicOptions, cancellationToken);
+            }
         }
 
         private async Task CreateQueueIfNotExistAsync(SubscriberContext subscriberContext,
             CancellationToken cancellationToken)
         {
+            var queueOptions = new CreateQueueOptions(subscriberContext.Specification.QueueName)
+            {
+                LockDuration = subscriberContext.Specification.LockDurationInSeconds,
+                MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
+                AutoDeleteOnIdle = subscriberContext.Specification.AutoDeleteOnIdle
+            };
+
             try
             {
-                var queueOptions = new CreateQueueOptions(subscriberContext.Specification.QueueName)
-                {
-                    LockDuration = subscriberContext.Specification.LockDurationInSeconds,
-                    MaxDeliveryCount = subscriberContext.Specification.MaxDeliveryCount,
-                    AutoDeleteOnIdle = subscriberContext.Specification.AutoDeleteOnIdle
-                };
-
                 await _adminClientClientObservable.VerifyQueueExitsAsync(queueOptions);
 
                 var queueExists =
@@ -102,10 +114,10 @@ namespace Rydo.AzureServiceBus.Client.Configurations.Host
 
                 await _adminClientClientObservable.PreConsumerAsync(subscriberContext);
             }
-            catch (Exception e)
+            catch (ServiceBusException)
             {
-                Console.WriteLine(e);
-                throw;
+                // most likely a race between two clients trying to create the same queue - we should be able to get it now
+                await _hostSettings.AdminClient.CreateQueueAsync(queueOptions, cancellationToken);
             }
         }
     }

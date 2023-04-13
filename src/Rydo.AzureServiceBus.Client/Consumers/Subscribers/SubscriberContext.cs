@@ -2,7 +2,12 @@ namespace Rydo.AzureServiceBus.Client.Consumers.Subscribers
 {
     using System;
 
-    public sealed class SubscriberContext
+    public interface ISubscriberContext
+    {
+    }
+
+    public sealed class SubscriberContext :
+        ISubscriberContext
     {
         internal SubscriberContext(SubscriberSpecification specification, Type contractType, Type handlerType)
         {

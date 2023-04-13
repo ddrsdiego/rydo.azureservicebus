@@ -4,11 +4,11 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading;
     using Configurations.Host;
     using Consumers.MessageRecordModel;
     using Consumers.Subscribers;
+    using Microsoft.Extensions.DependencyInjection;
     using Utils;
 
     public sealed class MessageConsumerContext :
@@ -18,9 +18,10 @@
         private int _faultsLength;
         private readonly object _syncLock;
 
+        private LinkedList<MessageRecord> _messagesRecordToRetry;
+
         private readonly Stopwatch _stopwatchMiddleware;
         private readonly Stopwatch _stopwatchMsgContext;
-        private LinkedList<MessageRecord> _messagesRecordToRetry;
         private readonly LinkedList<IMessageContext> _messageContexts;
 
         internal MessageConsumerContext(SubscriberContext subscriberContext, IServiceBusClientReceiver receiver,
@@ -61,20 +62,28 @@
         internal long ElapsedTimeMessageContext => _stopwatchMsgContext.ElapsedMilliseconds;
         internal Type HandlerType => SubscriberContext.HandlerType;
         internal Type ContractType => SubscriberContext.ContractType;
+
+        internal IServiceScope Scope;
+
         internal bool AnyFault => FaultsLength > 0;
         internal int FaultsLength { get; private set; }
 
         internal void Add(MessageContext messageContext)
         {
             var id = Interlocked.Increment(ref _length);
-            
+
             lock (_syncLock)
             {
                 messageContext.SetMessageConsumerContext(this);
                 _messageContexts.AddLast(messageContext);
-                
+
                 Length = id;
             }
+        }
+
+        internal void SetServiceScope(IServiceScope serviceScope)
+        {
+            Scope = serviceScope ?? throw new ArgumentNullException(nameof(serviceScope));
         }
 
         internal void MarkToRetry(MessageRecord messageRecord, string reason) =>
@@ -94,18 +103,10 @@
             }
         }
 
+        internal MessageRecord[] Faults => _messagesRecordToRetry.ToArray();
+
         internal IMessageContext[] MessagesContext => _messageContexts.ToArray();
-
-        internal IEnumerable<MessageRecord> Faults
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                foreach (var consumerRecord in _messagesRecordToRetry)
-                    yield return consumerRecord;
-            }
-        }
-
+        
         /// <summary>
         /// True if there is at least one message to be processed, false otherwise.
         /// </summary>

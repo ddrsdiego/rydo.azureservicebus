@@ -18,19 +18,19 @@
             IReceiverListenerContainer receiverListenerContainer)
         {
             _stopCancellationTokenSource = new CancellationTokenSource();
-            _subscriberContextContainer = subscriberContextContainer;
             _receiverListenerContainer = receiverListenerContainer;
+            _subscriberContextContainer = subscriberContextContainer;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
             foreach (var (topicName, receiverListener) in _receiverListenerContainer.Listeners)
             {
-                if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var consumerContext))
+                if (!_subscriberContextContainer.TryGetConsumerContext(topicName, out var subscriberContext))
                     continue;
-
-                await receiverListener.CreateEntitiesIfNotExistAsync(consumerContext,
-                    _stopCancellationTokenSource.Token);
+                
+                await receiverListener.CreateEntitiesIfNotExistAsync(subscriberContext, _stopCancellationTokenSource.Token);
+                await Task.Delay(500, cancellationToken);
             }
 
             await base.StartAsync(cancellationToken);

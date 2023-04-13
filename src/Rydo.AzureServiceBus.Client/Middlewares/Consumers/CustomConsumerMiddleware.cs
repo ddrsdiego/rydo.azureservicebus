@@ -5,25 +5,20 @@
     using Factories;
     using Handlers;
     using Logging;
-    using Microsoft.Extensions.DependencyInjection;
 
     internal sealed class CustomConsumerMiddleware : MessageMiddleware
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public CustomConsumerMiddleware(IServiceProvider serviceProvider)
+        public CustomConsumerMiddleware()
             : base(nameof(CustomConsumerMiddleware))
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
         protected override string ConsumerMessagesStep => LogTypeConstants.CustomHandlerConsumerStep;
 
         protected override async Task ExecuteInvokeAsync(MessageConsumerContext context, MiddlewareDelegate next)
         {
-            using var scope = _serviceProvider.CreateScope();
-            if (scope.ServiceProvider.GetService(context.HandlerType ?? throw new InvalidOperationException()) is
-                IConsumerHandler messageHandler)
+            if (context.Scope.ServiceProvider.GetService(context.HandlerType ?? throw new InvalidOperationException())
+                is IConsumerHandler messageHandler)
             {
                 try
                 {

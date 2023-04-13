@@ -23,9 +23,7 @@
 
             foreach (var subscriber in Listeners.Values)
             {
-                subscriber
-                    .MiddleExecutor(BuildMiddlewareExecutor(provider))
-                    .ServiceProvider(provider);
+                subscriber.MiddleExecutor(BuildMiddlewareExecutor(provider));
             }
         }
 

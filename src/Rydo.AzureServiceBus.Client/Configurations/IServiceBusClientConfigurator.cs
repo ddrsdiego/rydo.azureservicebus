@@ -7,7 +7,7 @@
 
     public interface IServiceBusClientConfigurator
     {
-        IServiceCollection Services { get; }
+        IServiceCollection Collection { get; }
         ServiceBusHostConfigurator Host { get; }
         ServiceBusReceiverConfigurator Receiver { get; }
         ServiceBusProducersConfigurator Producers { get; }
